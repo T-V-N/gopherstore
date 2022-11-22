@@ -33,7 +33,7 @@ func main() {
 	router.Use(chiMw.Compress(5))
 	router.Route("/api/user", func(userRouter chi.Router) {
 		userRouter.Post("/login", hn.HandleLogin)
-		userRouter.Post("/signup", hn.HandleRegister)
+		userRouter.Post("/register", hn.HandleRegister)
 		userRouter.Group(func(r chi.Router) {
 			r.Use(authMw)
 			r.Post("/orders", hn.HandleCreateOrder)
