@@ -79,7 +79,13 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	cred := sharedTypes.Credentials{}
-	json.NewDecoder(r.Body).Decode(&cred)
+
+	err := json.NewDecoder(r.Body).Decode(&cred)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	token, err := h.app.Login(ctx, cred)
 

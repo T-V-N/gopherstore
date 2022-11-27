@@ -188,7 +188,10 @@ func Test_HandlerLogin(t *testing.T) {
 			w := httptest.NewRecorder()
 			hn.HandleLogin(w, request)
 
-			bearerToken := w.Result().Header.Get("Authorization")
+			res := w.Result()
+			res.Body.Close()
+
+			bearerToken := res.Header.Get("Authorization")
 
 			assert.Equal(t, tt.want.statusCode, w.Code)
 			assert.Contains(t, bearerToken, tt.want.auth)
@@ -213,7 +216,10 @@ func Test_RegisterAndLogin(t *testing.T) {
 		w := httptest.NewRecorder()
 		hn.HandleRegister(w, request)
 
-		bearerToken := w.Result().Header.Get("Authorization")
+		res := w.Result()
+		res.Body.Close()
+
+		bearerToken := res.Header.Get("Authorization")
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Contains(t, bearerToken, "Bearer")

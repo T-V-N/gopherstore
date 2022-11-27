@@ -40,6 +40,8 @@ func (u *Updater) checkOrder(orderID, status string) {
 		return
 	}
 
+	defer r.Body.Close()
+
 	var o AccrualOrder
 	err = json.NewDecoder(r.Body).Decode(&o)
 
@@ -71,8 +73,7 @@ func InitUpdater(cfg config.Config, st storage.Storage, workerLimit int) {
 	ticker := time.NewTicker(10 * time.Second)
 
 	for range ticker.C {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
 		orders, err := st.GetUnproccessedOrders(ctx)
 
