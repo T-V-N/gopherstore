@@ -65,9 +65,9 @@ func (app *App) Login(ctx context.Context, creds sharedTypes.Credentials) (strin
 
 func (app *App) CreateOrder(ctx context.Context, orderID string, uid string) error {
 	ID, err := strconv.Atoi(orderID)
-	orderIDValid := utils.Valid(ID)
+	isOrderIDValid := utils.Valid(ID)
 
-	if !orderIDValid || err != nil {
+	if !isOrderIDValid || err != nil {
 		return utils.ErrWrongFormat
 	}
 
@@ -79,6 +79,14 @@ func (app *App) CreateOrder(ctx context.Context, orderID string, uid string) err
 func (app *App) ListOrders(ctx context.Context, uid string) ([]sharedTypes.Order, error) {
 	list, err := app.st.ListOrders(ctx, uid)
 
+	if err != nil {
+		return nil, err
+	}
+
+	if len(list) == 0 {
+		return nil, utils.ErrNoData
+	}
+
 	return list, err
 }
 
@@ -89,13 +97,33 @@ func (app *App) GetBalance(ctx context.Context, uid string) (sharedTypes.Balance
 }
 
 func (app *App) WithdrawBalance(ctx context.Context, uid, orderID string, amount float32) error {
-	err := app.st.WithdrawBalance(ctx, uid, orderID, amount)
+	ID, err := strconv.Atoi(orderID)
+	isOrderIDValid := utils.Valid(ID)
+
+	if !isOrderIDValid || err != nil {
+		return utils.ErrWrongFormat
+	}
+
+	balance, err := app.st.GetBalance(ctx, uid)
+
+	if balance.Current-amount < 0 {
+		return utils.ErrPaymentError
+	}
+
+	newWithdrawn := balance.Withdrawn + amount
+	newCurrent := balance.Current - amount
+
+	err = app.st.WithdrawBalance(ctx, uid, orderID, amount, newCurrent, newWithdrawn)
 
 	return err
 }
 
 func (app *App) GetListWithdrawals(ctx context.Context, uid string) ([]sharedTypes.Withdrawal, error) {
-	list, err := app.st.GetListWithdrawals(ctx, uid)
+	list, err := app.st.ListWithdrawals(ctx, uid)
+
+	if len(list) == 0 {
+		return []sharedTypes.Withdrawal{}, utils.ErrNoData
+	}
 
 	return list, err
 }

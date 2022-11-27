@@ -19,7 +19,7 @@ type Claims struct {
 func CreateToken(uid string, cfg *config.Config) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: jwt.At(time.Now().Add(time.Duration(cfg.JWTExpireTiming))),
+			ExpiresAt: jwt.At(time.Now().Add(time.Duration(cfg.JWTExpireTiming * int64(time.Hour)))),
 			IssuedAt:  jwt.At(time.Now()),
 		},
 		UID: uid,
@@ -40,7 +40,7 @@ func ParseToken(token string, key []byte) (string, error) {
 	}
 
 	if claims, ok := parsedToken.Claims.(*Claims); ok && parsedToken.Valid {
-		return claims.ID, nil
+		return claims.UID, nil
 	}
 	return "", utils.ErrNotAuthorized
 }

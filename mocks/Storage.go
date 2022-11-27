@@ -70,38 +70,15 @@ func (_m *Storage) GetBalance(ctx context.Context, uid string) (sharedTypes.Bala
 	return r0, r1
 }
 
-// GetListWithdrawals provides a mock function with given fields: ctx, uid
-func (_m *Storage) GetListWithdrawals(ctx context.Context, uid string) ([]sharedTypes.Withdrawal, error) {
-	ret := _m.Called(ctx, uid)
-
-	var r0 []sharedTypes.Withdrawal
-	if rf, ok := ret.Get(0).(func(context.Context, string) []sharedTypes.Withdrawal); ok {
-		r0 = rf(ctx, uid)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]sharedTypes.Withdrawal)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, uid)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetUser provides a mock function with given fields: ctx, creds
-func (_m *Storage) GetUser(ctx context.Context, creds sharedTypes.Credentials) (string, error) {
+func (_m *Storage) GetUser(ctx context.Context, creds sharedTypes.Credentials) (sharedTypes.User, error) {
 	ret := _m.Called(ctx, creds)
 
-	var r0 string
-	if rf, ok := ret.Get(0).(func(context.Context, sharedTypes.Credentials) string); ok {
+	var r0 sharedTypes.User
+	if rf, ok := ret.Get(0).(func(context.Context, sharedTypes.Credentials) sharedTypes.User); ok {
 		r0 = rf(ctx, creds)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Get(0).(sharedTypes.User)
 	}
 
 	var r1 error
@@ -137,13 +114,36 @@ func (_m *Storage) ListOrders(ctx context.Context, uid string) ([]sharedTypes.Or
 	return r0, r1
 }
 
-// WithdrawBalance provides a mock function with given fields: ctx, uid, orderID, amount
-func (_m *Storage) WithdrawBalance(ctx context.Context, uid string, orderID string, amount float32) error {
-	ret := _m.Called(ctx, uid, orderID, amount)
+// ListWithdrawals provides a mock function with given fields: ctx, uid
+func (_m *Storage) ListWithdrawals(ctx context.Context, uid string) ([]sharedTypes.Withdrawal, error) {
+	ret := _m.Called(ctx, uid)
+
+	var r0 []sharedTypes.Withdrawal
+	if rf, ok := ret.Get(0).(func(context.Context, string) []sharedTypes.Withdrawal); ok {
+		r0 = rf(ctx, uid)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]sharedTypes.Withdrawal)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, uid)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// WithdrawBalance provides a mock function with given fields: ctx, uid, orderID, amount, newCurrent, newWithdrawn
+func (_m *Storage) WithdrawBalance(ctx context.Context, uid string, orderID string, amount float32, newCurrent float32, newWithdrawn float32) error {
+	ret := _m.Called(ctx, uid, orderID, amount, newCurrent, newWithdrawn)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, float32) error); ok {
-		r0 = rf(ctx, uid, orderID, amount)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, float32, float32, float32) error); ok {
+		r0 = rf(ctx, uid, orderID, amount, newCurrent, newWithdrawn)
 	} else {
 		r0 = ret.Error(0)
 	}

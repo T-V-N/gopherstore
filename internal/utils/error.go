@@ -5,11 +5,13 @@ import "net/http"
 var (
 	ErrAuth           = &APIError{Status: http.StatusUnauthorized, msg: "invalid auth token"}
 	ErrNotFound       = &APIError{Status: http.StatusNotFound, msg: "not found"}
-	ErrDuplicate      = &APIError{Status: http.StatusBadRequest, msg: "duplicate"}
+	ErrDuplicate      = &APIError{Status: http.StatusConflict, msg: "duplicate"}
 	ErrBadCredentials = &APIError{Status: http.StatusBadRequest, msg: "login and pass must have more than 5 symbols"}
 	ErrNotAuthorized  = &APIError{Status: http.StatusUnauthorized, msg: "not authorized"}
 	ErrAlreadyCreated = &APIError{Status: http.StatusOK, msg: "entity already created"}
 	ErrWrongFormat    = &APIError{Status: http.StatusUnprocessableEntity, msg: "entity provided has unproccessable format"}
+	ErrNoData         = &APIError{Status: http.StatusNoContent, msg: "no data"}
+	ErrPaymentError   = &APIError{Status: http.StatusPaymentRequired, msg: "not enough money to spend"}
 )
 
 type APIError struct {

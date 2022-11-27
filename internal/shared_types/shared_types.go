@@ -2,6 +2,7 @@ package sharedTypes
 
 import (
 	"context"
+	"time"
 )
 
 type Credentials struct {
@@ -10,10 +11,10 @@ type Credentials struct {
 }
 
 type Order struct {
-	Number     string  `json:"number"`
-	Status     string  `json:"status"`
-	Accural    float32 `json:"accural,omitempty"`
-	UploadedAt string  `json:"uploaded_at"`
+	Number     string    `json:"number"`
+	Status     string    `json:"status"`
+	Accural    float32   `json:"accural,omitempty"`
+	UploadedAt time.Time `json:"uploaded_at"`
 }
 
 type Balance struct {
@@ -27,9 +28,9 @@ type WtihdrawRequest struct {
 }
 
 type Withdrawal struct {
-	OrderID      string  `json:"order"`
-	Sum          float32 `json:"sum"`
-	ProccessedAt string  `json:"processed_at"`
+	OrderID     string  `json:"order"`
+	Sum         float32 `json:"sum"`
+	ProcessedAt string  `json:"processed_at"`
 }
 
 type User struct {
@@ -47,8 +48,8 @@ type Storage interface {
 	CreateOrder(ctx context.Context, orderID, uid string) error
 	ListOrders(ctx context.Context, uid string) ([]Order, error)
 	GetBalance(ctx context.Context, uid string) (Balance, error)
-	WithdrawBalance(ctx context.Context, uid, orderID string, amount float32) error
-	GetListWithdrawals(ctx context.Context, uid string) ([]Withdrawal, error)
+	WithdrawBalance(ctx context.Context, uid, orderID string, amount, newCurrent, newWithdrawn float32) error
+	ListWithdrawals(ctx context.Context, uid string) ([]Withdrawal, error)
 }
 
 type UIDKey struct{}

@@ -24,6 +24,12 @@ func InitHandler(a *app.App) *Handler {
 }
 
 func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
+	cp := r.Header.Get("Content-type")
+	if cp != "application/json" {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
@@ -53,6 +59,12 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
+	cp := r.Header.Get("Content-type")
+	if cp != "application/json" {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
@@ -77,6 +89,12 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
+	cp := r.Header.Get("Content-type")
+	if cp != "text/plain" {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
@@ -117,16 +135,17 @@ func (h *Handler) HandleListOrder(w http.ResponseWriter, r *http.Request) {
 
 	list, err := h.app.ListOrders(ctx, uid)
 
-	if err != json.NewEncoder(w).Encode(list) {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if len(list) == 0 {
+	if err == utils.ErrNoData {
 		http.Error(w, "No content", http.StatusNoContent)
 		return
 	}
 
+	if err != json.NewEncoder(w).Encode(list) {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Add("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -143,6 +162,7 @@ func (h *Handler) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Add("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -163,9 +183,17 @@ func (h *Handler) HandleBalanceWithdraw(w http.ResponseWriter, r *http.Request) 
 	err = h.app.WithdrawBalance(ctx, uid, withdrawRequest.OrderID, withdrawRequest.Sum)
 
 	if err != nil {
-		//TODO: err check
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		switch {
+		case errors.Is(err, utils.ErrPaymentError):
+			http.Error(w, err.Error(), http.StatusPaymentRequired)
+			return
+		case errors.Is(err, utils.ErrWrongFormat):
+			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+			return
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -178,9 +206,19 @@ func (h *Handler) HandleListWithdrawals(w http.ResponseWriter, r *http.Request) 
 	uid, _ := r.Context().Value(sharedTypes.UIDKey{}).(string)
 
 	withdrawalsList, err := h.app.GetListWithdrawals(ctx, uid)
+	if err != nil {
+		switch {
+		case errors.Is(err, utils.ErrNoData):
+			http.Error(w, err.Error(), http.StatusNoContent)
+			return
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
 
 	if err != json.NewEncoder(w).Encode(withdrawalsList) {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
