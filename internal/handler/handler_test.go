@@ -584,10 +584,11 @@ func Test_HandleListwithdrawal(t *testing.T) {
 		result []interface{}
 	}
 
+	mockTime := time.Now()
 	mockWithdrawalList := []sharedTypes.Withdrawal{
-		{OrderID: "1", Sum: float32(319), ProcessedAt: "sometime"},
-		{OrderID: "2", Sum: float32(13), ProcessedAt: "sometime"},
-		{OrderID: "133", Sum: float32(319), ProcessedAt: "sometime"},
+		{ID: "1", Sum: float32(319), ProcessedAt: mockTime},
+		{ID: "2", Sum: float32(13), ProcessedAt: mockTime},
+		{ID: "133", Sum: float32(319), ProcessedAt: mockTime},
 	}
 
 	tests := []struct {

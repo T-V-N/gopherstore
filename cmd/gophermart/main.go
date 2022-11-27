@@ -41,7 +41,7 @@ func main() {
 			r.Get("/orders", hn.HandleListOrder)
 			r.Get("/balance", hn.HandleGetBalance)
 			r.Post("/balance/withdraw", hn.HandleBalanceWithdraw)
-			r.Get("/balance/withdraw", hn.HandleListWithdrawals)
+			r.Get("/withdrawals", hn.HandleListWithdrawals)
 		})
 	})
 

@@ -28,9 +28,9 @@ type WtihdrawRequest struct {
 }
 
 type Withdrawal struct {
-	OrderID     string  `json:"order"`
-	Sum         float32 `json:"sum"`
-	ProcessedAt string  `json:"processed_at"`
+	ID          string    `json:"order"`
+	Sum         float32   `json:"sum"`
+	ProcessedAt time.Time `json:"processed_at"`
 }
 
 type User struct {

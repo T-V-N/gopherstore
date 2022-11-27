@@ -30,7 +30,7 @@ type AccrualOrder struct {
 }
 
 func (u *Updater) checkOrder(orderID, status string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	r, err := http.Get(u.cfg.AccrualSystemAddress + "/api/orders/" + orderID)
@@ -59,6 +59,7 @@ func (u *Updater) checkOrder(orderID, status string) {
 func InitUpdater(cfg config.Config, st storage.Storage, workerLimit int) {
 	jobCh := make(chan *Job)
 	u := Updater{JobQueue: []Job{}, cfg: cfg, Ch: jobCh, st: st}
+
 	for i := 0; i < workerLimit; i++ {
 		go func() {
 			for job := range jobCh {
@@ -69,7 +70,7 @@ func InitUpdater(cfg config.Config, st storage.Storage, workerLimit int) {
 
 	ticker := time.NewTicker(10 * time.Second)
 
-	for _ = range ticker.C {
+	for range ticker.C {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 

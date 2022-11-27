@@ -108,7 +108,9 @@ func (st *Storage) CreateOrder(ctx context.Context, orderID, uid string) error {
 	sqlCheckExists := `
 	SELECT ID, UID FROM orders WHERE ID = $1  
 	`
+
 	var id string
+
 	var ownerID int
 
 	err := st.conn.QueryRow(ctx, sqlCheckExists, orderID).Scan(&id, &ownerID)
@@ -235,7 +237,7 @@ func (st *Storage) ListWithdrawals(ctx context.Context, uid string) ([]sharedTyp
 
 	for rows.Next() {
 		entry := sharedTypes.Withdrawal{}
-		err = rows.Scan(&entry.OrderID, &entry.Sum, &entry.ProcessedAt)
+		err = rows.Scan(&entry.ID, &entry.Sum, &entry.ProcessedAt)
 
 		if err != nil {
 			return nil, err
