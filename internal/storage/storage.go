@@ -45,7 +45,7 @@ func InitStorage(cfg config.Config) (*Storage, error) {
 	ORDERS
 	(
 		uid integer references users(uid),
-		id integer primary key,
+		id bigint primary key,
 		status varchar,
 		accural real,
 		uploaded_at timestamp default current_timestamp
@@ -54,7 +54,7 @@ func InitStorage(cfg config.Config) (*Storage, error) {
 	CREATE TABLE IF NOT EXISTS 
 	WITHDRAWALS
 	(
-		id integer primary key,
+		id bigint primary key,
 		order_id integer references orders(id),
 		sum real,
 		processed_at timestamp default current_timestamp
@@ -107,7 +107,8 @@ func (st *Storage) CreateOrder(ctx context.Context, orderID, uid string) error {
 	sqlCheckExists := `
 	SELECT ID, UID FROM orders WHERE ID = $1  
 	`
-	var id, ownerID int
+	var id string
+	var ownerID int
 
 	err := st.conn.QueryRow(ctx, sqlCheckExists, orderID).Scan(&id, &ownerID)
 	if err == nil {

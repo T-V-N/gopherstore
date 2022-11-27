@@ -2,12 +2,12 @@ package app
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/T-V-N/gopherstore/internal/auth"
 	"github.com/T-V-N/gopherstore/internal/config"
 	sharedTypes "github.com/T-V-N/gopherstore/internal/shared_types"
 	"github.com/T-V-N/gopherstore/internal/utils"
+	"github.com/joeljunstrom/go-luhn"
 )
 
 type App struct {
@@ -64,14 +64,13 @@ func (app *App) Login(ctx context.Context, creds sharedTypes.Credentials) (strin
 }
 
 func (app *App) CreateOrder(ctx context.Context, orderID string, uid string) error {
-	ID, err := strconv.Atoi(orderID)
-	isOrderIDValid := utils.Valid(ID)
+	isOrderIDValid := luhn.Valid(orderID)
 
-	if !isOrderIDValid || err != nil {
+	if !isOrderIDValid {
 		return utils.ErrWrongFormat
 	}
 
-	err = app.st.CreateOrder(ctx, orderID, uid)
+	err := app.st.CreateOrder(ctx, orderID, uid)
 
 	return err
 }
@@ -97,14 +96,17 @@ func (app *App) GetBalance(ctx context.Context, uid string) (sharedTypes.Balance
 }
 
 func (app *App) WithdrawBalance(ctx context.Context, uid, orderID string, amount float32) error {
-	ID, err := strconv.Atoi(orderID)
-	isOrderIDValid := utils.Valid(ID)
+	isOrderIDValid := luhn.Valid(orderID)
 
-	if !isOrderIDValid || err != nil {
+	if !isOrderIDValid {
 		return utils.ErrWrongFormat
 	}
 
 	balance, err := app.st.GetBalance(ctx, uid)
+
+	if err != nil {
+		return err
+	}
 
 	if balance.Current-amount < 0 {
 		return utils.ErrPaymentError
