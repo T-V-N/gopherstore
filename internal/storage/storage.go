@@ -55,8 +55,8 @@ func InitStorage(cfg config.Config) (*Storage, error) {
 	CREATE TABLE IF NOT EXISTS 
 	WITHDRAWALS
 	(
+		uid integer references users(uid),
 		id bigint primary key,
-		order_id integer references orders(id),
 		sum real,
 		processed_at timestamp default current_timestamp
 	);
@@ -187,31 +187,41 @@ func (st *Storage) GetBalance(ctx context.Context, uid string) (sharedTypes.Bala
 }
 
 func (st *Storage) WithdrawBalance(ctx context.Context, uid, orderID string, amount, newCurrent, newWithdrawn float32) error {
-	sqlStatement := `
-	BEGIN;
-	
-	INSERT INTO USERS (curent_balance, withdrawn)
-	VALUES ($1, $2)
-	WHERE uid = $3;
-
-	INSERT INTO WITHDRAWALS (order_id, sum) 
-	VALUES ($4, $5)
-
-	COMMIT;
-	`
-
-	_, err := st.conn.Exec(ctx, sqlStatement, newCurrent, newWithdrawn, uid, orderID, amount)
+	tx, err := st.conn.Begin(ctx)
 
 	if err != nil {
 		return err
 	}
 
-	return nil
+	sqlUpdateUser := `	
+	UPDATE USERS
+    SET current_balance = $1, withdrawn = $2
+	WHERE uid = $3;
+	`
+
+	sqlInsertWd := `
+	INSERT INTO WITHDRAWALS (id, sum, uid) 
+	VALUES ($1, $2, $3);
+	`
+
+	_, err = tx.Exec(ctx, sqlUpdateUser, newCurrent, newWithdrawn, uid)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, sqlInsertWd, orderID, amount, uid)
+
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (st *Storage) ListWithdrawals(ctx context.Context, uid string) ([]sharedTypes.Withdrawal, error) {
 	sqlStatement := `
-	SELECT order_id, sum, processed_at::timestamptz FROM orders WHERE UID = $1 ORDER BY processed_at
+	SELECT id, sum, processed_at::timestamptz FROM withdrawals WHERE UID = $1 ORDER BY processed_at
 	`
 
 	rows, err := st.conn.Query(ctx, sqlStatement, uid)

@@ -59,6 +59,11 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 
 	token, err := auth.CreateToken(uid, h.app.Cfg)
 
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Add("Authorization", fmt.Sprintf("Bearer %v", token))
 	w.WriteHeader(http.StatusOK)
 }
