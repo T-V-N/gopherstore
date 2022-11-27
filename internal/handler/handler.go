@@ -133,7 +133,7 @@ func (h *Handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleListOrder(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
 	uid, _ := r.Context().Value(sharedTypes.UIDKey{}).(string)
@@ -146,13 +146,12 @@ func (h *Handler) HandleListOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Add("Content-Type", "application/json")
+
 	if err != json.NewEncoder(w).Encode(list) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
@@ -223,11 +222,10 @@ func (h *Handler) HandleListWithdrawals(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
+	w.Header().Add("Content-Type", "application/json")
+
 	if err != json.NewEncoder(w).Encode(withdrawalsList) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 }

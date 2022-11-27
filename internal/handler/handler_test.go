@@ -346,9 +346,9 @@ func Test_HandleListOrder(t *testing.T) {
 
 	mockTime := time.Now()
 	mockOrderList := []sharedTypes.Order{
-		{Number: "1", Status: "NEW", Accural: 0, UploadedAt: mockTime},
-		{Number: "2", Status: "NEW", Accural: 33, UploadedAt: mockTime},
-		{Number: "133", Status: "INVALID", Accural: 0, UploadedAt: mockTime},
+		{Number: "1", Status: "NEW", Accrual: 0, UploadedAt: mockTime},
+		{Number: "2", Status: "NEW", Accrual: 33, UploadedAt: mockTime},
+		{Number: "133", Status: "INVALID", Accrual: 0, UploadedAt: mockTime},
 	}
 
 	tests := []struct {
