@@ -84,7 +84,7 @@ func (app *App) CreateOrder(ctx context.Context, orderID string, uid string) err
 		return err
 	}
 
-	r, err := http.Post(app.Cfg.AccuralSystemAddress+"/api/orders", "application/json", body)
+	r, err := http.Post(app.Cfg.AccrualSystemAddress+"/api/orders", "application/json", body)
 
 	if err != nil {
 		return err

@@ -133,7 +133,7 @@ func (h *Handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleListOrder(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
 	defer cancel()
 
 	uid, _ := r.Context().Value(sharedTypes.UIDKey{}).(string)

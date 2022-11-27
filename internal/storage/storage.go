@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strconv"
 
@@ -47,7 +48,7 @@ func InitStorage(cfg config.Config) (*Storage, error) {
 		uid integer references users(uid),
 		id bigint primary key,
 		status varchar,
-		accural real,
+		accrual real,
 		uploaded_at timestamp default current_timestamp
 	);
 
@@ -124,7 +125,7 @@ func (st *Storage) CreateOrder(ctx context.Context, orderID, uid string) error {
 	}
 
 	sqlCreate := `
-	INSERT INTO orders (uid, id, status, accural)
+	INSERT INTO orders (uid, id, status, accrual)
 	VALUES ($1, $2, 'NEW', 0)`
 
 	_, err = st.conn.Exec(ctx, sqlCreate, uid, orderID)
@@ -137,11 +138,12 @@ func (st *Storage) CreateOrder(ctx context.Context, orderID, uid string) error {
 
 func (st *Storage) ListOrders(ctx context.Context, uid string) ([]sharedTypes.Order, error) {
 	sqlStatement := `
-	SELECT ID, status, accural, uploaded_at::timestamptz FROM orders WHERE UID = $1 ORDER BY uploaded_at
+	SELECT ID, status, accrual, uploaded_at::timestamptz FROM orders WHERE UID = $1 ORDER BY uploaded_at
 	`
 
 	rows, err := st.conn.Query(ctx, sqlStatement, uid)
 	if err != nil {
+		fmt.Print(err)
 		return nil, err
 	}
 
@@ -151,7 +153,7 @@ func (st *Storage) ListOrders(ctx context.Context, uid string) ([]sharedTypes.Or
 
 	for rows.Next() {
 		entry := sharedTypes.Order{}
-		err = rows.Scan(&entry.Number, &entry.Status, &entry.Accural, &entry.UploadedAt)
+		err = rows.Scan(&entry.Number, &entry.Status, &entry.Accrual, &entry.UploadedAt)
 
 		if err != nil {
 			return nil, err
@@ -242,7 +244,7 @@ func (st *Storage) ListWithdrawals(ctx context.Context, uid string) ([]sharedTyp
 
 func (st *Storage) GetUnproccessedOrders(ctx context.Context) ([]sharedTypes.Order, error) {
 	sqlStatement := `
-	SELECT id, status, accural, uploaded_at::timestamptz FROM orders WHERE status = 'NEW' or status = 'PROCESSING'
+	SELECT id, status, accrual, uploaded_at::timestamptz FROM orders WHERE status = 'NEW' or status = 'PROCESSING'
 	`
 
 	rows, err := st.conn.Query(ctx, sqlStatement)
@@ -256,7 +258,7 @@ func (st *Storage) GetUnproccessedOrders(ctx context.Context) ([]sharedTypes.Ord
 
 	for rows.Next() {
 		entry := sharedTypes.Order{}
-		err = rows.Scan(&entry.Number, &entry.Status, &entry.Accural, &entry.UploadedAt)
+		err = rows.Scan(&entry.Number, &entry.Status, &entry.Accrual, &entry.UploadedAt)
 
 		if err != nil {
 			return nil, err
@@ -273,23 +275,23 @@ func (st *Storage) GetUnproccessedOrders(ctx context.Context) ([]sharedTypes.Ord
 	return orders, nil
 }
 
-func (st *Storage) UpdateOrder(ctx context.Context, orderID, status string, accural float32) error {
+func (st *Storage) UpdateOrder(ctx context.Context, orderID, status string, accrual float32) error {
 	updateOrderSQL := `
-	UPDATE orders SET status = $1, accural = $2  WHERE id = $3
+	UPDATE orders SET status = $1, accrual = $2  WHERE id = $3
 	`
-	_, err := st.conn.Exec(ctx, updateOrderSQL, status, accural, orderID)
+	_, err := st.conn.Exec(ctx, updateOrderSQL, status, accrual, orderID)
 
 	if err != nil {
 		return err
 	}
 
-	if accural != 0 {
+	if accrual != 0 {
 		updateBalanceSQL := `
 		UPDATE USERS SET current_balance = current_balance + $1
 		WHERE uid = (select uid from orders WHERE id = $2)
 		`
 
-		_, err := st.conn.Exec(ctx, updateBalanceSQL, accural, orderID)
+		_, err := st.conn.Exec(ctx, updateBalanceSQL, accrual, orderID)
 
 		if err != nil {
 			return err

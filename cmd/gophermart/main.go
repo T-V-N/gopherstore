@@ -48,4 +48,5 @@ func main() {
 	go service.InitUpdater(*cfg, *st, 1)
 
 	log.Panic(http.ListenAndServe(cfg.RunAddress, router))
+
 }

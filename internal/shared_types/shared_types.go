@@ -1,4 +1,4 @@
-package sharedTypes
+package sharedtypes
 
 import (
 	"context"
@@ -13,7 +13,7 @@ type Credentials struct {
 type Order struct {
 	Number     string    `json:"number"`
 	Status     string    `json:"status"`
-	Accural    float32   `json:"accural,omitempty"`
+	Accrual    float32   `json:"accrual,omitempty"`
 	UploadedAt time.Time `json:"uploaded_at"`
 }
 

@@ -8,9 +8,9 @@ import (
 )
 
 type Config struct {
-	RunAddress           string `env:"RUN_ADDRESS" envDefault:":8888"`
+	RunAddress           string `env:"RUN_ADDRESS" envDefault:":8080"`
 	DatabaseURI          string `env:"DATABASE_URI"`
-	AccuralSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:"http://127.0.0.1:8080"`
+	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:"http://127.0.0.1:8888"`
 	JWTExpireTiming      int64  `env:"JWT_EXPIRE_TIMING" envDefault:"10000"`
 	SecretKey            string `env:"SECRET_KEY" envDefault:"secret"`
 }
@@ -25,7 +25,7 @@ func Init() (*Config, error) {
 
 	flag.StringVar(&cfg.RunAddress, "a", cfg.RunAddress, "server address")
 	flag.StringVar(&cfg.DatabaseURI, "d", cfg.DatabaseURI, "db address")
-	flag.StringVar(&cfg.AccuralSystemAddress, "r", cfg.AccuralSystemAddress, "accural system address")
+	flag.StringVar(&cfg.AccrualSystemAddress, "r", cfg.AccrualSystemAddress, "accrual system address")
 	flag.Parse()
 
 	return cfg, nil
