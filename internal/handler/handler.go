@@ -233,8 +233,9 @@ func (h *Handler) HandleListWithdrawals(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Add("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(withdrawalsList)
 
-	if err != json.NewEncoder(w).Encode(withdrawalsList) {
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
