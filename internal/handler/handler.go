@@ -136,7 +136,9 @@ func (h *Handler) HandleListOrder(w http.ResponseWriter, r *http.Request) {
 	list, err := h.app.ListOrders(ctx, uid)
 
 	if err == utils.ErrNoData {
+		w.Header().Add("Content-Type", "application/json")
 		http.Error(w, "No content", http.StatusNoContent)
+
 		return
 	}
 
