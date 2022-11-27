@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	sharedTypes "github.com/T-V-N/gopherstore/internal/shared_types"
+	sharedtypes "github.com/T-V-N/gopherstore/internal/shared_types"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -29,18 +29,18 @@ func (_m *Storage) CreateOrder(ctx context.Context, orderID string, uid string) 
 }
 
 // CreateUser provides a mock function with given fields: ctx, creds
-func (_m *Storage) CreateUser(ctx context.Context, creds sharedTypes.Credentials) (string, error) {
+func (_m *Storage) CreateUser(ctx context.Context, creds sharedtypes.Credentials) (string, error) {
 	ret := _m.Called(ctx, creds)
 
 	var r0 string
-	if rf, ok := ret.Get(0).(func(context.Context, sharedTypes.Credentials) string); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, sharedtypes.Credentials) string); ok {
 		r0 = rf(ctx, creds)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, sharedTypes.Credentials) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, sharedtypes.Credentials) error); ok {
 		r1 = rf(ctx, creds)
 	} else {
 		r1 = ret.Error(1)
@@ -50,14 +50,14 @@ func (_m *Storage) CreateUser(ctx context.Context, creds sharedTypes.Credentials
 }
 
 // GetBalance provides a mock function with given fields: ctx, uid
-func (_m *Storage) GetBalance(ctx context.Context, uid string) (sharedTypes.Balance, error) {
+func (_m *Storage) GetBalance(ctx context.Context, uid string) (sharedtypes.Balance, error) {
 	ret := _m.Called(ctx, uid)
 
-	var r0 sharedTypes.Balance
-	if rf, ok := ret.Get(0).(func(context.Context, string) sharedTypes.Balance); ok {
+	var r0 sharedtypes.Balance
+	if rf, ok := ret.Get(0).(func(context.Context, string) sharedtypes.Balance); ok {
 		r0 = rf(ctx, uid)
 	} else {
-		r0 = ret.Get(0).(sharedTypes.Balance)
+		r0 = ret.Get(0).(sharedtypes.Balance)
 	}
 
 	var r1 error
@@ -71,15 +71,15 @@ func (_m *Storage) GetBalance(ctx context.Context, uid string) (sharedTypes.Bala
 }
 
 // GetUnproccessedOrders provides a mock function with given fields: ctx
-func (_m *Storage) GetUnproccessedOrders(ctx context.Context) ([]sharedTypes.Order, error) {
+func (_m *Storage) GetUnproccessedOrders(ctx context.Context) ([]sharedtypes.Order, error) {
 	ret := _m.Called(ctx)
 
-	var r0 []sharedTypes.Order
-	if rf, ok := ret.Get(0).(func(context.Context) []sharedTypes.Order); ok {
+	var r0 []sharedtypes.Order
+	if rf, ok := ret.Get(0).(func(context.Context) []sharedtypes.Order); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]sharedTypes.Order)
+			r0 = ret.Get(0).([]sharedtypes.Order)
 		}
 	}
 
@@ -94,18 +94,18 @@ func (_m *Storage) GetUnproccessedOrders(ctx context.Context) ([]sharedTypes.Ord
 }
 
 // GetUser provides a mock function with given fields: ctx, creds
-func (_m *Storage) GetUser(ctx context.Context, creds sharedTypes.Credentials) (sharedTypes.User, error) {
+func (_m *Storage) GetUser(ctx context.Context, creds sharedtypes.Credentials) (sharedtypes.User, error) {
 	ret := _m.Called(ctx, creds)
 
-	var r0 sharedTypes.User
-	if rf, ok := ret.Get(0).(func(context.Context, sharedTypes.Credentials) sharedTypes.User); ok {
+	var r0 sharedtypes.User
+	if rf, ok := ret.Get(0).(func(context.Context, sharedtypes.Credentials) sharedtypes.User); ok {
 		r0 = rf(ctx, creds)
 	} else {
-		r0 = ret.Get(0).(sharedTypes.User)
+		r0 = ret.Get(0).(sharedtypes.User)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, sharedTypes.Credentials) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, sharedtypes.Credentials) error); ok {
 		r1 = rf(ctx, creds)
 	} else {
 		r1 = ret.Error(1)
@@ -115,15 +115,15 @@ func (_m *Storage) GetUser(ctx context.Context, creds sharedTypes.Credentials) (
 }
 
 // ListOrders provides a mock function with given fields: ctx, uid
-func (_m *Storage) ListOrders(ctx context.Context, uid string) ([]sharedTypes.Order, error) {
+func (_m *Storage) ListOrders(ctx context.Context, uid string) ([]sharedtypes.Order, error) {
 	ret := _m.Called(ctx, uid)
 
-	var r0 []sharedTypes.Order
-	if rf, ok := ret.Get(0).(func(context.Context, string) []sharedTypes.Order); ok {
+	var r0 []sharedtypes.Order
+	if rf, ok := ret.Get(0).(func(context.Context, string) []sharedtypes.Order); ok {
 		r0 = rf(ctx, uid)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]sharedTypes.Order)
+			r0 = ret.Get(0).([]sharedtypes.Order)
 		}
 	}
 
@@ -138,15 +138,15 @@ func (_m *Storage) ListOrders(ctx context.Context, uid string) ([]sharedTypes.Or
 }
 
 // ListWithdrawals provides a mock function with given fields: ctx, uid
-func (_m *Storage) ListWithdrawals(ctx context.Context, uid string) ([]sharedTypes.Withdrawal, error) {
+func (_m *Storage) ListWithdrawals(ctx context.Context, uid string) ([]sharedtypes.Withdrawal, error) {
 	ret := _m.Called(ctx, uid)
 
-	var r0 []sharedTypes.Withdrawal
-	if rf, ok := ret.Get(0).(func(context.Context, string) []sharedTypes.Withdrawal); ok {
+	var r0 []sharedtypes.Withdrawal
+	if rf, ok := ret.Get(0).(func(context.Context, string) []sharedtypes.Withdrawal); ok {
 		r0 = rf(ctx, uid)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]sharedTypes.Withdrawal)
+			r0 = ret.Get(0).([]sharedtypes.Withdrawal)
 		}
 	}
 
