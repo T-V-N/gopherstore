@@ -163,6 +163,7 @@ func (h *Handler) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
 	balance, err := h.app.GetBalance(ctx, uid)
 
 	w.Header().Add("Content-Type", "application/json")
+
 	if err != json.NewEncoder(w).Encode(balance) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
