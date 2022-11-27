@@ -34,7 +34,12 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	cred := sharedTypes.Credentials{}
-	json.NewDecoder(r.Body).Decode(&cred)
+	err := json.NewDecoder(r.Body).Decode(&cred)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	uid, err := h.app.Register(ctx, cred)
 
@@ -136,7 +141,6 @@ func (h *Handler) HandleListOrder(w http.ResponseWriter, r *http.Request) {
 	list, err := h.app.ListOrders(ctx, uid)
 
 	if err == utils.ErrNoData {
-		w.Header().Add("Content-Type", "application/json")
 		http.Error(w, "No content", http.StatusNoContent)
 
 		return

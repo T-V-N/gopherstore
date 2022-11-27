@@ -50,6 +50,7 @@ type Storage interface {
 	GetBalance(ctx context.Context, uid string) (Balance, error)
 	WithdrawBalance(ctx context.Context, uid, orderID string, amount, newCurrent, newWithdrawn float32) error
 	ListWithdrawals(ctx context.Context, uid string) ([]Withdrawal, error)
+	GetUnproccessedOrders(ctx context.Context) ([]Order, error)
 }
 
 type UIDKey struct{}

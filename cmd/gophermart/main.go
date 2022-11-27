@@ -8,6 +8,7 @@ import (
 	"github.com/T-V-N/gopherstore/internal/config"
 	"github.com/T-V-N/gopherstore/internal/handler"
 	"github.com/T-V-N/gopherstore/internal/middleware"
+	service "github.com/T-V-N/gopherstore/internal/services"
 	"github.com/T-V-N/gopherstore/internal/storage"
 
 	"github.com/go-chi/chi/v5"
@@ -43,6 +44,8 @@ func main() {
 			r.Get("/balance/withdraw", hn.HandleListWithdrawals)
 		})
 	})
+
+	go service.InitUpdater(*cfg, *st, 1)
 
 	log.Panic(http.ListenAndServe(cfg.RunAddress, router))
 }

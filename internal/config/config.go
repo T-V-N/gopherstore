@@ -8,9 +8,9 @@ import (
 )
 
 type Config struct {
-	RunAddress           string `env:"RUN_ADDRESS" envDefault:":8080"`
+	RunAddress           string `env:"RUN_ADDRESS" envDefault:":8888"`
 	DatabaseURI          string `env:"DATABASE_URI"`
-	AccuralSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" `
+	AccuralSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:"http://127.0.0.1:8080"`
 	JWTExpireTiming      int64  `env:"JWT_EXPIRE_TIMING" envDefault:"10000"`
 	SecretKey            string `env:"SECRET_KEY" envDefault:"secret"`
 }

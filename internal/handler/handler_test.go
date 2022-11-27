@@ -99,7 +99,12 @@ func Test_HandlerRegister(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			body := bytes.NewBuffer([]byte{})
-			json.NewEncoder(body).Encode(tt.body)
+			err := json.NewEncoder(body).Encode(tt.body)
+
+			if err != nil {
+				panic("JSON unmarshall error")
+			}
+
 			request := httptest.NewRequest(http.MethodPost, "/", body)
 			request.Header.Add("Content-type", tt.contentType)
 			w := httptest.NewRecorder()
@@ -171,7 +176,12 @@ func Test_HandlerLogin(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			body := bytes.NewBuffer([]byte{})
-			json.NewEncoder(body).Encode(tt.body)
+			err := json.NewEncoder(body).Encode(tt.body)
+
+			if err != nil {
+				panic("JSON unmarshall error")
+			}
+
 			request := httptest.NewRequest(http.MethodPost, "/", body)
 			request.Header.Add("Content-type", tt.contentType)
 

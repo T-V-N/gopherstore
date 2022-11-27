@@ -239,3 +239,62 @@ func (st *Storage) ListWithdrawals(ctx context.Context, uid string) ([]sharedTyp
 
 	return withdrawals, nil
 }
+
+func (st *Storage) GetUnproccessedOrders(ctx context.Context) ([]sharedTypes.Order, error) {
+	sqlStatement := `
+	SELECT id, status, accural, uploaded_at::timestamptz FROM orders WHERE status = 'NEW' or status = 'PROCESSING'
+	`
+
+	rows, err := st.conn.Query(ctx, sqlStatement)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	orders := []sharedTypes.Order{}
+
+	for rows.Next() {
+		entry := sharedTypes.Order{}
+		err = rows.Scan(&entry.Number, &entry.Status, &entry.Accural, &entry.UploadedAt)
+
+		if err != nil {
+			return nil, err
+		}
+
+		orders = append(orders, entry)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+func (st *Storage) UpdateOrder(ctx context.Context, orderID, status string, accural float32) error {
+	updateOrderSQL := `
+	UPDATE orders SET status = $1, accural = $2  WHERE id = $3
+	`
+	_, err := st.conn.Exec(ctx, updateOrderSQL, status, accural, orderID)
+
+	if err != nil {
+		return err
+	}
+
+	if accural != 0 {
+		updateBalanceSQL := `
+		UPDATE USERS SET current_balance = current_balance + $1
+		WHERE uid = (select uid from orders WHERE id = $2)
+		`
+
+		_, err := st.conn.Exec(ctx, updateBalanceSQL, accural, orderID)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

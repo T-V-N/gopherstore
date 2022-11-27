@@ -1,7 +1,10 @@
 package app
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"net/http"
 
 	"github.com/T-V-N/gopherstore/internal/auth"
 	"github.com/T-V-N/gopherstore/internal/config"
@@ -13,6 +16,10 @@ import (
 type App struct {
 	st  sharedTypes.Storage
 	Cfg *config.Config
+}
+
+type OrderID struct {
+	Order string `json:"order"`
 }
 
 func InitApp(st sharedTypes.Storage, cfg *config.Config) *App {
@@ -70,7 +77,22 @@ func (app *App) CreateOrder(ctx context.Context, orderID string, uid string) err
 		return utils.ErrWrongFormat
 	}
 
-	err := app.st.CreateOrder(ctx, orderID, uid)
+	body := bytes.NewBuffer([]byte{})
+
+	err := json.NewEncoder(body).Encode(OrderID{Order: orderID})
+	if err != nil {
+		return err
+	}
+
+	r, err := http.Post(app.Cfg.AccuralSystemAddress+"/api/orders", "application/json", body)
+
+	if err != nil {
+		return err
+	}
+
+	r.Body.Close()
+
+	err = app.st.CreateOrder(ctx, orderID, uid)
 
 	return err
 }
