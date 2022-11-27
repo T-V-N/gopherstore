@@ -73,11 +73,7 @@ func InitUpdater(cfg config.Config, st storage.Storage, workerLimit int) {
 	ticker := time.NewTicker(10 * time.Second)
 
 	for range ticker.C {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-
-		defer cancel()
-
-		orders, err := st.GetUnproccessedOrders(ctx)
+		orders, err := st.GetUnproccessedOrders(context.Background())
 
 		if err != nil {
 			fmt.Print(err)
