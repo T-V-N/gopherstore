@@ -222,5 +222,6 @@ func (h *Handler) HandleListWithdrawals(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	w.Header().Add("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
