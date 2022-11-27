@@ -24,7 +24,7 @@ func InitHandler(a *app.App) *Handler {
 }
 
 func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
-	cp := r.Header.Get("Content-type")
+	cp := r.Header.Get("Content-Type")
 	if cp != "application/json" {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
@@ -59,7 +59,7 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	cp := r.Header.Get("Content-type")
+	cp := r.Header.Get("Content-Type")
 	if cp != "application/json" {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
@@ -89,7 +89,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
-	cp := r.Header.Get("Content-type")
+	cp := r.Header.Get("Content-Type")
 	if cp != "text/plain" {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
@@ -145,7 +145,7 @@ func (h *Handler) HandleListOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("Content-type", "application/json")
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -162,7 +162,7 @@ func (h *Handler) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("Content-type", "application/json")
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -222,6 +222,6 @@ func (h *Handler) HandleListWithdrawals(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	w.Header().Add("Content-type", "application/json")
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 }
