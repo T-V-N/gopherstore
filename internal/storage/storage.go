@@ -10,6 +10,9 @@ import (
 	"github.com/T-V-N/gopherstore/internal/config"
 	sharedTypes "github.com/T-V-N/gopherstore/internal/shared_types"
 	"github.com/T-V-N/gopherstore/internal/utils"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -28,6 +31,23 @@ func InitStorage(cfg config.Config) (*Storage, error) {
 		log.Printf("Unable to connect to database: %v\n", err.Error())
 		return nil, err
 	}
+
+	m, err := migrate.New(
+		"file://../../migrations",
+		cfg.DatabaseURI)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.Up()
+
+	if err != nil {
+		if err != migrate.ErrNoChange {
+			return nil, err
+		}
+	}
+
 	return &Storage{conn, cfg}, nil
 }
 
