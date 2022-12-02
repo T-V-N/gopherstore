@@ -25,6 +25,13 @@ type Storage struct {
 }
 
 func InitStorage(cfg config.Config) (*Storage, error) {
+	conn, err := pgxpool.New(context.Background(), cfg.DatabaseURI)
+
+	if err != nil {
+		log.Printf("Unable to connect to database: %v\n", err.Error())
+		return nil, err
+	}
+
 	m, err := migrate.New(
 		"file://../../migrations",
 		cfg.DatabaseURI)
@@ -33,19 +40,14 @@ func InitStorage(cfg config.Config) (*Storage, error) {
 		return nil, err
 	}
 
+	defer m.Close()
+
 	err = m.Up()
 
 	if err != nil {
 		if err != migrate.ErrNoChange {
 			return nil, err
 		}
-	}
-
-	conn, err := pgxpool.New(context.Background(), cfg.DatabaseURI)
-
-	if err != nil {
-		log.Printf("Unable to connect to database: %v\n", err.Error())
-		return nil, err
 	}
 
 	return &Storage{conn, cfg}, nil
