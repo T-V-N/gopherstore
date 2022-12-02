@@ -23,7 +23,7 @@ func main() {
 
 	st, err := storage.InitStorage(*cfg)
 	if err != nil {
-		log.Panic("Unable to init storage")
+		log.Fatal(err)
 	}
 
 	app := app.InitApp(st, cfg)
