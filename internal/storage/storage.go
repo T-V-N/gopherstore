@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 
 	"github.com/T-V-N/gopherstore/internal/config"
@@ -32,8 +33,13 @@ func InitStorage(cfg config.Config) (*Storage, error) {
 		return nil, err
 	}
 
+	pwd, err := os.Getwd()
+	if err != nil {
+		log.Panic(err)
+	}
+
 	m, err := migrate.New(
-		"file://../../migrations",
+		"file://"+pwd+"/../../migrations",
 		cfg.DatabaseURI)
 
 	if err != nil {
