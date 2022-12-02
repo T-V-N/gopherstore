@@ -9,18 +9,29 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/T-V-N/gopherstore/internal/app"
 	"github.com/T-V-N/gopherstore/internal/auth"
+	"github.com/T-V-N/gopherstore/internal/config"
 	sharedTypes "github.com/T-V-N/gopherstore/internal/shared_types"
 	"github.com/T-V-N/gopherstore/internal/utils"
 )
 
-type Handler struct {
-	app *app.App
+type AppInterface interface {
+	CreateOrder(ctx context.Context, orderID string, uid string) error
+	GetBalance(ctx context.Context, uid string) (sharedTypes.Balance, error)
+	GetListWithdrawals(ctx context.Context, uid string) ([]sharedTypes.Withdrawal, error)
+	ListOrders(ctx context.Context, uid string) ([]sharedTypes.Order, error)
+	Login(ctx context.Context, creds sharedTypes.Credentials) (string, error)
+	Register(ctx context.Context, creds sharedTypes.Credentials) (string, error)
+	WithdrawBalance(ctx context.Context, uid string, orderID string, amount float32) error
 }
 
-func InitHandler(a *app.App) *Handler {
-	return &Handler{a}
+type Handler struct {
+	app AppInterface
+	Cfg *config.Config
+}
+
+func InitHandler(a AppInterface, cfg *config.Config) *Handler {
+	return &Handler{a, cfg}
 }
 
 func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +68,7 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	token, err := auth.CreateToken(uid, h.app.Cfg)
+	token, err := auth.CreateToken(uid, h.Cfg)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

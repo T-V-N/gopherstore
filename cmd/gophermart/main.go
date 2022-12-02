@@ -27,7 +27,7 @@ func main() {
 	}
 
 	app := app.InitApp(st, cfg)
-	hn := handler.InitHandler(app)
+	hn := handler.InitHandler(app, cfg)
 	authMw := middleware.InitAuth(cfg)
 
 	router := chi.NewRouter()
@@ -48,5 +48,4 @@ func main() {
 	go service.InitUpdater(*cfg, *st, 1)
 
 	log.Panic(http.ListenAndServe(cfg.RunAddress, router))
-
 }
