@@ -37,7 +37,6 @@ func InitStorage(cfg config.Config) (*Storage, error) {
 		cfg.DatabaseURI)
 
 	if err != nil {
-		log.Panic("Something wrong with migrations", err)
 		return nil, err
 	}
 
@@ -45,7 +44,6 @@ func InitStorage(cfg config.Config) (*Storage, error) {
 
 	if err != nil {
 		if err != migrate.ErrNoChange {
-			log.Panic("Something wrong with migrations", err)
 			return nil, err
 		}
 	}
