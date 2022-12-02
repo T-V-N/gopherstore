@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 
 	"github.com/T-V-N/gopherstore/internal/config"
@@ -26,20 +25,8 @@ type Storage struct {
 }
 
 func InitStorage(cfg config.Config) (*Storage, error) {
-	conn, err := pgxpool.New(context.Background(), cfg.DatabaseURI)
-
-	if err != nil {
-		log.Printf("Unable to connect to database: %v\n", err.Error())
-		return nil, err
-	}
-
-	pwd, err := os.Getwd()
-	if err != nil {
-		log.Panic(err)
-	}
-
 	m, err := migrate.New(
-		"file://"+pwd+"/../../migrations",
+		"file://../../migrations",
 		cfg.DatabaseURI)
 
 	if err != nil {
@@ -52,6 +39,13 @@ func InitStorage(cfg config.Config) (*Storage, error) {
 		if err != migrate.ErrNoChange {
 			return nil, err
 		}
+	}
+
+	conn, err := pgxpool.New(context.Background(), cfg.DatabaseURI)
+
+	if err != nil {
+		log.Printf("Unable to connect to database: %v\n", err.Error())
+		return nil, err
 	}
 
 	return &Storage{conn, cfg}, nil
