@@ -26,7 +26,7 @@ type Storage struct {
 
 func InitStorage(cfg config.Config) (*Storage, error) {
 	m, err := migrate.New(
-		"file://migrations",
+		"file://migrations/",
 		cfg.DatabaseURI)
 
 	if err != nil {
