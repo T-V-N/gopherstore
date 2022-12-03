@@ -33,7 +33,7 @@ func InitStorage(cfg config.Config) (*Storage, error) {
 	}
 
 	m, err := migrate.New(
-		"file:///"+cfg.MigrationsPath,
+		"file://migrations/",
 		cfg.DatabaseURI)
 
 	if err != nil {
