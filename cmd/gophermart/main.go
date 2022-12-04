@@ -33,7 +33,9 @@ func main() {
 	authMw := middleware.InitAuth(cfg)
 
 	router := chi.NewRouter()
-	router.Use(chiMw.Compress(5))
+	router.Use(chiMw.Compress(cfg.CompressLevel))
+	router.Use(middleware.GzipHandle)
+
 	router.Route("/api/user", func(userRouter chi.Router) {
 		userRouter.Post("/login", hn.HandleLogin)
 		userRouter.Post("/register", hn.HandleRegister)

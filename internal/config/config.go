@@ -14,6 +14,7 @@ type Config struct {
 	JWTExpireTiming      int64  `env:"JWT_EXPIRE_TIMING" envDefault:"10000"`
 	SecretKey            string `env:"SECRET_KEY" envDefault:"secret"`
 	MigrationsPath       string `env:"MIGRATIONS_PATH" envDefault:"../../migrations"`
+	CompressLevel        int    `env:"COMPRESS_LEVEL" envDefault:"5"`
 }
 
 func Init() (*Config, error) {
