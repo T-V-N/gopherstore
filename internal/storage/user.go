@@ -111,5 +111,5 @@ func (user *User) WithdrawBalance(ctx context.Context, uid, orderID string, amou
 		return err
 	}
 
-	return withdrawal.CreateWithdrawal(ctx, orderID, amount, uid)
+	return withdrawal.CreateWithdrawal(ctx, uid, amount, orderID)
 }
