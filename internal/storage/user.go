@@ -41,7 +41,12 @@ func (user *User) CreateUser(ctx context.Context, creds sharedTypes.Credentials)
 }
 
 func (user *User) UpdateUser(ctx context.Context, orderID, uid string, accrual float32) error {
+	if user.lockedMu[uid] == nil {
+		user.lockedMu[uid] = &sync.Mutex{}
+	}
+
 	user.lockedMu[uid].Lock()
+
 	defer user.lockedMu[uid].Unlock()
 
 	updateBalanceSQL := `
@@ -91,7 +96,10 @@ func (user *User) GetBalance(ctx context.Context, uid string) (sharedTypes.Balan
 }
 
 func (user *User) GetBalanceAndLock(ctx context.Context, uid string) (sharedTypes.Balance, error) {
-	user.lockedMu[uid] = &sync.Mutex{}
+	if user.lockedMu[uid] == nil {
+		user.lockedMu[uid] = &sync.Mutex{}
+	}
+
 	user.lockedMu[uid].Lock()
 
 	return user.GetBalance(ctx, uid)
