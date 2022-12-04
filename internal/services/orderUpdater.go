@@ -23,6 +23,7 @@ type Updater struct {
 	Ch       chan *Job
 	cfg      config.Config
 	order    sharedTypes.OrderStorage
+	user     sharedTypes.UserStorage
 }
 
 type AccrualOrder struct {
@@ -53,7 +54,7 @@ func (u *Updater) checkOrder(orderID, status string) {
 	}
 
 	if o.Status != status {
-		err = u.order.UpdateOrder(ctx, orderID, o.Status, o.Accrual)
+		err = u.order.UpdateOrder(ctx, orderID, o.Status, o.Accrual, u.user)
 		if err != nil {
 			fmt.Print(err)
 		}
@@ -70,7 +71,14 @@ func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int) {
 		return
 	}
 
-	u := Updater{JobQueue: []Job{}, cfg: cfg, Ch: jobCh, order: order}
+	user, err := storage.InitUser(conn)
+
+	if err != nil {
+		fmt.Print("unable to start updater")
+		return
+	}
+
+	u := Updater{JobQueue: []Job{}, cfg: cfg, Ch: jobCh, order: order, user: user}
 
 	for i := 0; i < workerLimit; i++ {
 		go func() {

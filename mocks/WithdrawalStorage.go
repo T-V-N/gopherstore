@@ -14,6 +14,20 @@ type WithdrawalStorage struct {
 	mock.Mock
 }
 
+// CreateWithdrawal provides a mock function with given fields: _a0, _a1, _a2, _a3
+func (_m *WithdrawalStorage) CreateWithdrawal(_a0 context.Context, _a1 string, _a2 float32, _a3 string) error {
+	ret := _m.Called(_a0, _a1, _a2, _a3)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, float32, string) error); ok {
+		r0 = rf(_a0, _a1, _a2, _a3)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ListWithdrawals provides a mock function with given fields: _a0, _a1
 func (_m *WithdrawalStorage) ListWithdrawals(_a0 context.Context, _a1 string) ([]sharedtypes.Withdrawal, error) {
 	ret := _m.Called(_a0, _a1)
@@ -35,20 +49,6 @@ func (_m *WithdrawalStorage) ListWithdrawals(_a0 context.Context, _a1 string) ([
 	}
 
 	return r0, r1
-}
-
-// WithdrawBalance provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4, _a5
-func (_m *WithdrawalStorage) WithdrawBalance(_a0 context.Context, _a1 string, _a2 string, _a3 float32, _a4 float32, _a5 float32) error {
-	ret := _m.Called(_a0, _a1, _a2, _a3, _a4, _a5)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, float32, float32, float32) error); ok {
-		r0 = rf(_a0, _a1, _a2, _a3, _a4, _a5)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
 }
 
 type mockConstructorTestingTNewWithdrawalStorage interface {

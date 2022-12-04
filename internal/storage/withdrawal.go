@@ -18,39 +18,6 @@ func InitWithdrawal(conn *pgxpool.Pool) (*Withdrawal, error) {
 	return &Withdrawal{conn}, nil
 }
 
-func (w *Withdrawal) WithdrawBalance(ctx context.Context, uid, orderID string, amount, newCurrent, newWithdrawn float32) error {
-	tx, err := w.Conn.Begin(ctx)
-
-	if err != nil {
-		return err
-	}
-
-	sqlUpdateUser := `	
-	UPDATE USERS
-    SET current_balance = $1, withdrawn = $2
-	WHERE uid = $3;
-	`
-
-	sqlInsertWd := `
-	INSERT INTO WITHDRAWALS (id, sum, uid) 
-	VALUES ($1, $2, $3);
-	`
-
-	_, err = tx.Exec(ctx, sqlUpdateUser, newCurrent, newWithdrawn, uid)
-
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec(ctx, sqlInsertWd, orderID, amount, uid)
-
-	if err != nil {
-		return err
-	}
-
-	return tx.Commit(ctx)
-}
-
 func (w *Withdrawal) ListWithdrawals(ctx context.Context, uid string) ([]sharedTypes.Withdrawal, error) {
 	sqlStatement := `
 	SELECT id, sum, processed_at::timestamptz FROM withdrawals WHERE UID = $1 ORDER BY processed_at
@@ -82,4 +49,19 @@ func (w *Withdrawal) ListWithdrawals(ctx context.Context, uid string) ([]sharedT
 	}
 
 	return withdrawals, nil
+}
+
+func (w *Withdrawal) CreateWithdrawal(ctx context.Context, uid string, amount float32, orderID string) error {
+	sqlInsertWd := `
+	INSERT INTO WITHDRAWALS (id, sum, uid) 
+	VALUES ($1, $2, $3);
+	`
+
+	_, err := w.Conn.Exec(ctx, sqlInsertWd, orderID, amount, uid)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

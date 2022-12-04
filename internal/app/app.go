@@ -147,7 +147,7 @@ func (app *App) WithdrawBalance(ctx context.Context, uid, orderID string, amount
 		return utils.ErrWrongFormat
 	}
 
-	balance, err := app.User.GetBalance(ctx, uid)
+	balance, err := app.User.GetBalanceAndLock(ctx, uid)
 
 	if err != nil {
 		return err
@@ -160,7 +160,7 @@ func (app *App) WithdrawBalance(ctx context.Context, uid, orderID string, amount
 	newWithdrawn := balance.Withdrawn + amount
 	newCurrent := balance.Current - amount
 
-	err = app.Withdrawal.WithdrawBalance(ctx, uid, orderID, amount, newCurrent, newWithdrawn)
+	err = app.User.WithdrawBalance(ctx, uid, orderID, amount, newCurrent, newWithdrawn, app.Withdrawal)
 
 	return err
 }

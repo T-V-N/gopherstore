@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"errors"
+	"sync"
 
 	sharedTypes "github.com/T-V-N/gopherstore/internal/shared_types"
 	"github.com/T-V-N/gopherstore/internal/utils"
@@ -14,11 +15,12 @@ import (
 )
 
 type User struct {
-	Conn *pgxpool.Pool
+	Conn     *pgxpool.Pool
+	lockedMu sync.Mutex
 }
 
 func InitUser(conn *pgxpool.Pool) (*User, error) {
-	return &User{conn}, nil
+	return &User{conn, sync.Mutex{}}, nil
 }
 
 func (user *User) CreateUser(ctx context.Context, creds sharedTypes.Credentials) (string, error) {
@@ -36,6 +38,24 @@ func (user *User) CreateUser(ctx context.Context, creds sharedTypes.Credentials)
 	}
 
 	return id, nil
+}
+
+func (user *User) UpdateUser(ctx context.Context, orderID string, accrual float32) error {
+	user.lockedMu.Lock()
+	defer user.lockedMu.Unlock()
+
+	updateBalanceSQL := `
+	UPDATE USERS SET current_balance = current_balance + $1
+	WHERE uid = (select uid from orders WHERE id = $2)
+	`
+
+	_, err := user.Conn.Exec(ctx, updateBalanceSQL, accrual, orderID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (user *User) GetUser(ctx context.Context, creds sharedTypes.Credentials) (sharedTypes.User, error) {
@@ -68,4 +88,28 @@ func (user *User) GetBalance(ctx context.Context, uid string) (sharedTypes.Balan
 	}
 
 	return sharedTypes.Balance{Current: u.CurrentBalance, Withdrawn: u.Withdrawn}, nil
+}
+
+func (user *User) GetBalanceAndLock(ctx context.Context, uid string) (sharedTypes.Balance, error) {
+	user.lockedMu.Lock()
+
+	return user.GetBalance(ctx, uid)
+}
+
+func (user *User) WithdrawBalance(ctx context.Context, uid, orderID string, amount, newCurrent, newWithdrawn float32, withdrawal sharedTypes.WithdrawalStorage) error {
+	defer user.lockedMu.Unlock()
+
+	sqlUpdateUser := `	
+	UPDATE USERS
+    SET current_balance = $1, withdrawn = $2
+	WHERE uid = $3;
+	`
+
+	_, err := user.Conn.Exec(ctx, sqlUpdateUser, newCurrent, newWithdrawn, uid)
+
+	if err != nil {
+		return err
+	}
+
+	return withdrawal.CreateWithdrawal(ctx, orderID, amount, uid)
 }

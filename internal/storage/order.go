@@ -122,7 +122,7 @@ func (order *Order) GetUnproccessedOrders(ctx context.Context) ([]sharedTypes.Or
 	return orders, nil
 }
 
-func (order *Order) UpdateOrder(ctx context.Context, orderID, status string, accrual float32) error {
+func (order *Order) UpdateOrder(ctx context.Context, orderID, status string, accrual float32, user sharedTypes.UserStorage) error {
 	updateOrderSQL := `
 	UPDATE orders SET status = $1, accrual = $2  WHERE id = $3
 	`
@@ -133,16 +133,7 @@ func (order *Order) UpdateOrder(ctx context.Context, orderID, status string, acc
 	}
 
 	if accrual != 0 {
-		updateBalanceSQL := `
-		UPDATE USERS SET current_balance = current_balance + $1
-		WHERE uid = (select uid from orders WHERE id = $2)
-		`
-
-		_, err := order.Conn.Exec(ctx, updateBalanceSQL, accrual, orderID)
-
-		if err != nil {
-			return err
-		}
+		return user.UpdateUser(ctx, orderID, accrual)
 	}
 
 	return nil

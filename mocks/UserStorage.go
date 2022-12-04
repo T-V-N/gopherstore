@@ -56,6 +56,27 @@ func (_m *UserStorage) GetBalance(_a0 context.Context, _a1 string) (sharedtypes.
 	return r0, r1
 }
 
+// GetBalanceAndLock provides a mock function with given fields: _a0, _a1
+func (_m *UserStorage) GetBalanceAndLock(_a0 context.Context, _a1 string) (sharedtypes.Balance, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 sharedtypes.Balance
+	if rf, ok := ret.Get(0).(func(context.Context, string) sharedtypes.Balance); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Get(0).(sharedtypes.Balance)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetUser provides a mock function with given fields: _a0, _a1
 func (_m *UserStorage) GetUser(_a0 context.Context, _a1 sharedtypes.Credentials) (sharedtypes.User, error) {
 	ret := _m.Called(_a0, _a1)
@@ -75,6 +96,34 @@ func (_m *UserStorage) GetUser(_a0 context.Context, _a1 sharedtypes.Credentials)
 	}
 
 	return r0, r1
+}
+
+// UpdateUser provides a mock function with given fields: _a0, _a1, _a2
+func (_m *UserStorage) UpdateUser(_a0 context.Context, _a1 string, _a2 float32) error {
+	ret := _m.Called(_a0, _a1, _a2)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, float32) error); ok {
+		r0 = rf(_a0, _a1, _a2)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// WithdrawBalance provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4, _a5, _a6
+func (_m *UserStorage) WithdrawBalance(_a0 context.Context, _a1 string, _a2 string, _a3 float32, _a4 float32, _a5 float32, _a6 sharedtypes.WithdrawalStorage) error {
+	ret := _m.Called(_a0, _a1, _a2, _a3, _a4, _a5, _a6)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, float32, float32, float32, sharedtypes.WithdrawalStorage) error); ok {
+		r0 = rf(_a0, _a1, _a2, _a3, _a4, _a5, _a6)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 type mockConstructorTestingTNewUserStorage interface {
