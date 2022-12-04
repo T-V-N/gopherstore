@@ -48,7 +48,7 @@ type UserStorage interface {
 	GetBalance(context.Context, string) (Balance, error)
 	GetBalanceAndLock(context.Context, string) (Balance, error)
 	WithdrawBalance(context.Context, string, string, float32, float32, float32, WithdrawalStorage) error
-	UpdateUser(context.Context, string, float32) error
+	UpdateUser(context.Context, string, string, float32) error
 }
 
 type OrderStorage interface {

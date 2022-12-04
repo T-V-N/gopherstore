@@ -125,15 +125,18 @@ func (order *Order) GetUnproccessedOrders(ctx context.Context) ([]sharedTypes.Or
 func (order *Order) UpdateOrder(ctx context.Context, orderID, status string, accrual float32, user sharedTypes.UserStorage) error {
 	updateOrderSQL := `
 	UPDATE orders SET status = $1, accrual = $2  WHERE id = $3
+	returning uid;
 	`
-	_, err := order.Conn.Exec(ctx, updateOrderSQL, status, accrual, orderID)
+
+	var uid string
+	err := order.Conn.QueryRow(ctx, updateOrderSQL, status, accrual, orderID).Scan(&uid)
 
 	if err != nil {
 		return err
 	}
 
 	if accrual != 0 {
-		return user.UpdateUser(ctx, orderID, accrual)
+		return user.UpdateUser(ctx, orderID, uid, accrual)
 	}
 
 	return nil

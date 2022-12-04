@@ -16,11 +16,11 @@ import (
 
 type User struct {
 	Conn     *pgxpool.Pool
-	lockedMu sync.Mutex
+	lockedMu map[string]*sync.Mutex
 }
 
 func InitUser(conn *pgxpool.Pool) (*User, error) {
-	return &User{conn, sync.Mutex{}}, nil
+	return &User{conn, map[string]*sync.Mutex{}}, nil
 }
 
 func (user *User) CreateUser(ctx context.Context, creds sharedTypes.Credentials) (string, error) {
@@ -40,9 +40,9 @@ func (user *User) CreateUser(ctx context.Context, creds sharedTypes.Credentials)
 	return id, nil
 }
 
-func (user *User) UpdateUser(ctx context.Context, orderID string, accrual float32) error {
-	user.lockedMu.Lock()
-	defer user.lockedMu.Unlock()
+func (user *User) UpdateUser(ctx context.Context, orderID, uid string, accrual float32) error {
+	user.lockedMu[uid].Lock()
+	defer user.lockedMu[uid].Unlock()
 
 	updateBalanceSQL := `
 	UPDATE USERS SET current_balance = current_balance + $1
@@ -91,13 +91,14 @@ func (user *User) GetBalance(ctx context.Context, uid string) (sharedTypes.Balan
 }
 
 func (user *User) GetBalanceAndLock(ctx context.Context, uid string) (sharedTypes.Balance, error) {
-	user.lockedMu.Lock()
+	user.lockedMu[uid] = &sync.Mutex{}
+	user.lockedMu[uid].Lock()
 
 	return user.GetBalance(ctx, uid)
 }
 
 func (user *User) WithdrawBalance(ctx context.Context, uid, orderID string, amount, newCurrent, newWithdrawn float32, withdrawal sharedTypes.WithdrawalStorage) error {
-	defer user.lockedMu.Unlock()
+	defer user.lockedMu[uid].Unlock()
 
 	sqlUpdateUser := `	
 	UPDATE USERS
