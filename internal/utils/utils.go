@@ -6,7 +6,7 @@ import (
 )
 
 func ValidateLogPass(creds sharedTypes.Credentials) (err error) {
-	if creds.Login == "" || len(creds.Login) < 5 {
+	if creds.Login == "" || len(creds.Login) < 4 {
 		return ErrBadCredentials
 	}
 	return nil
