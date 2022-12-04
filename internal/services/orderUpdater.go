@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/T-V-N/gopherstore/internal/config"
+	sharedTypes "github.com/T-V-N/gopherstore/internal/shared_types"
 	"github.com/T-V-N/gopherstore/internal/storage"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Job struct {
@@ -20,7 +22,7 @@ type Updater struct {
 	JobQueue []Job
 	Ch       chan *Job
 	cfg      config.Config
-	st       storage.Storage
+	order    sharedTypes.OrderStorage
 }
 
 type AccrualOrder struct {
@@ -51,16 +53,24 @@ func (u *Updater) checkOrder(orderID, status string) {
 	}
 
 	if o.Status != status {
-		err = u.st.UpdateOrder(ctx, orderID, o.Status, o.Accrual)
+		err = u.order.UpdateOrder(ctx, orderID, o.Status, o.Accrual)
 		if err != nil {
 			fmt.Print(err)
 		}
 	}
 }
 
-func InitUpdater(cfg config.Config, st storage.Storage, workerLimit int) {
+func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int) {
 	jobCh := make(chan *Job)
-	u := Updater{JobQueue: []Job{}, cfg: cfg, Ch: jobCh, st: st}
+
+	order, err := storage.InitOrder(conn)
+
+	if err != nil {
+		fmt.Print("unable to start updater")
+		return
+	}
+
+	u := Updater{JobQueue: []Job{}, cfg: cfg, Ch: jobCh, order: order}
 
 	for i := 0; i < workerLimit; i++ {
 		go func() {
@@ -73,7 +83,7 @@ func InitUpdater(cfg config.Config, st storage.Storage, workerLimit int) {
 	ticker := time.NewTicker(10 * time.Second)
 
 	for range ticker.C {
-		orders, err := st.GetUnproccessedOrders(context.Background())
+		orders, err := order.GetUnproccessedOrders(context.Background())
 
 		if err != nil {
 			fmt.Print(err)

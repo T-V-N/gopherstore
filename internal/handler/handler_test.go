@@ -89,12 +89,15 @@ func Test_HandlerRegister(t *testing.T) {
 		},
 	}
 	cfg, _ := InitTestConfig()
-	st := mocks.NewStorage(t)
-	a := app.InitApp(st, cfg)
-	hn := handler.InitHandler(a, cfg)
+	order := mocks.NewOrderStorage(t)
+	user := mocks.NewUserStorage(t)
+	withdrawal := mocks.NewWithdrawalStorage(t)
 
-	st.On("CreateUser", mock.Anything, mock.Anything).Return("some_uid", nil).Once()
-	st.On("CreateUser", mock.Anything, mock.Anything).Return("", utils.ErrDuplicate)
+	a := app.App{User: user, Order: order, Withdrawal: withdrawal, Cfg: cfg}
+	hn := handler.InitHandler(&a, cfg)
+
+	user.On("CreateUser", mock.Anything, mock.Anything).Return("some_uid", nil).Once()
+	user.On("CreateUser", mock.Anything, mock.Anything).Return("", utils.ErrDuplicate)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -166,12 +169,15 @@ func Test_HandlerLogin(t *testing.T) {
 		},
 	}
 	cfg, _ := InitTestConfig()
-	st := mocks.NewStorage(t)
-	a := app.InitApp(st, cfg)
-	hn := handler.InitHandler(a, cfg)
+	order := mocks.NewOrderStorage(t)
+	user := mocks.NewUserStorage(t)
+	withdrawal := mocks.NewWithdrawalStorage(t)
 
-	st.On("GetUser", mock.Anything, mock.Anything).Return(sharedTypes.User{UID: "1", Login: "tester", PasswordHash: "$2a$14$Shj508U123/afnKaPZV4BOTlR3Dt89EGONrff25rbZsg49vzdo8Ga", CurrentBalance: 0, Withdrawn: 0, CreatedAt: "-"}, nil).Once()
-	st.On("GetUser", mock.Anything, mock.Anything).Return(sharedTypes.User{}, utils.ErrNotAuthorized)
+	a := app.App{User: user, Order: order, Withdrawal: withdrawal, Cfg: cfg}
+	hn := handler.InitHandler(&a, cfg)
+
+	user.On("GetUser", mock.Anything, mock.Anything).Return(sharedTypes.User{UID: "1", Login: "tester", PasswordHash: "$2a$14$Shj508U123/afnKaPZV4BOTlR3Dt89EGONrff25rbZsg49vzdo8Ga", CurrentBalance: 0, Withdrawn: 0, CreatedAt: "-"}, nil).Once()
+	user.On("GetUser", mock.Anything, mock.Anything).Return(sharedTypes.User{}, utils.ErrNotAuthorized)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -201,11 +207,13 @@ func Test_HandlerLogin(t *testing.T) {
 
 func Test_RegisterAndLogin(t *testing.T) {
 	cfg, _ := InitTestConfig()
-	st := mocks.NewStorage(t)
-	a := app.InitApp(st, cfg)
-	hn := handler.InitHandler(a, cfg)
+	order := mocks.NewOrderStorage(t)
+	user := mocks.NewUserStorage(t)
+	withdrawal := mocks.NewWithdrawalStorage(t)
 
-	st.On("CreateUser", mock.Anything, mock.Anything).Return("some_uid", nil)
+	a := app.App{User: user, Order: order, Withdrawal: withdrawal, Cfg: cfg}
+	hn := handler.InitHandler(&a, cfg)
+	user.On("CreateUser", mock.Anything, mock.Anything).Return("some_uid", nil)
 
 	t.Run("Check login after register", func(t *testing.T) {
 		body := bytes.NewBuffer([]byte{})
@@ -317,14 +325,17 @@ func Test_HandleCreateOrder(t *testing.T) {
 		},
 	}
 	cfg, _ := InitTestConfig()
-	st := mocks.NewStorage(t)
-	a := app.InitApp(st, cfg)
-	hn := handler.InitHandler(a, cfg)
+	order := mocks.NewOrderStorage(t)
+	user := mocks.NewUserStorage(t)
+	withdrawal := mocks.NewWithdrawalStorage(t)
+
+	a := app.App{User: user, Order: order, Withdrawal: withdrawal, Cfg: cfg}
+	hn := handler.InitHandler(&a, cfg)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.mockData.isNeeded {
-				st.On(tt.mockData.method, tt.mockData.args...).Return(tt.mockData.result).Once()
+				order.On(tt.mockData.method, tt.mockData.args...).Return(tt.mockData.result).Once()
 			}
 
 			request := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(tt.body))
@@ -390,13 +401,16 @@ func Test_HandleListOrder(t *testing.T) {
 		},
 	}
 	cfg, _ := InitTestConfig()
-	st := mocks.NewStorage(t)
-	a := app.InitApp(st, cfg)
-	hn := handler.InitHandler(a, cfg)
+	order := mocks.NewOrderStorage(t)
+	user := mocks.NewUserStorage(t)
+	withdrawal := mocks.NewWithdrawalStorage(t)
+
+	a := app.App{User: user, Order: order, Withdrawal: withdrawal, Cfg: cfg}
+	hn := handler.InitHandler(&a, cfg)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			st.On(tt.mockData.method, tt.mockData.args...).Return(tt.mockData.result...).Once()
+			order.On(tt.mockData.method, tt.mockData.args...).Return(tt.mockData.result...).Once()
 
 			request := httptest.NewRequest(http.MethodGet, "/", nil)
 
@@ -461,13 +475,16 @@ func Test_HandleGetBalance(t *testing.T) {
 		},
 	}
 	cfg, _ := InitTestConfig()
-	st := mocks.NewStorage(t)
-	a := app.InitApp(st, cfg)
-	hn := handler.InitHandler(a, cfg)
+	order := mocks.NewOrderStorage(t)
+	user := mocks.NewUserStorage(t)
+	withdrawal := mocks.NewWithdrawalStorage(t)
+
+	a := app.App{User: user, Order: order, Withdrawal: withdrawal, Cfg: cfg}
+	hn := handler.InitHandler(&a, cfg)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			st.On(tt.mockData.method, tt.mockData.args...).Return(tt.mockData.result...).Once()
+			user.On(tt.mockData.method, tt.mockData.args...).Return(tt.mockData.result...).Once()
 
 			request := httptest.NewRequest(http.MethodGet, "/", nil)
 
@@ -492,9 +509,10 @@ func Test_HandleWithdrawBalance(t *testing.T) {
 	}
 
 	type mockSettings struct {
-		method string
-		args   []interface{}
-		result []interface{}
+		storageTyp string
+		method     string
+		args       []interface{}
+		result     []interface{}
 	}
 
 	tests := []struct {
@@ -514,13 +532,15 @@ func Test_HandleWithdrawBalance(t *testing.T) {
 				statusCode: http.StatusOK,
 			},
 			mockData: []mockSettings{{
-				method: "GetBalance",
-				args:   []interface{}{mock.Anything, "1337"},
-				result: []interface{}{sharedTypes.Balance{Current: float32(334), Withdrawn: float32(300)}, nil},
+				storageTyp: "user",
+				method:     "GetBalance",
+				args:       []interface{}{mock.Anything, "1337"},
+				result:     []interface{}{sharedTypes.Balance{Current: float32(334), Withdrawn: float32(300)}, nil},
 			}, {
-				method: "WithdrawBalance",
-				args:   []interface{}{mock.Anything, "1337", "12345678903", float32(333), float32(1), float32(633)},
-				result: []interface{}{nil, nil},
+				storageTyp: "withdrawal",
+				method:     "WithdrawBalance",
+				args:       []interface{}{mock.Anything, "1337", "12345678903", float32(333), float32(1), float32(633)},
+				result:     []interface{}{nil, nil},
 			},
 			},
 		},
@@ -533,9 +553,10 @@ func Test_HandleWithdrawBalance(t *testing.T) {
 				statusCode: http.StatusPaymentRequired,
 			},
 			mockData: []mockSettings{{
-				method: "GetBalance",
-				args:   []interface{}{mock.Anything, "1337"},
-				result: []interface{}{sharedTypes.Balance{Current: float32(332), Withdrawn: float32(333)}, nil},
+				storageTyp: "user",
+				method:     "GetBalance",
+				args:       []interface{}{mock.Anything, "1337"},
+				result:     []interface{}{sharedTypes.Balance{Current: float32(332), Withdrawn: float32(333)}, nil},
 			},
 			},
 		},
@@ -551,14 +572,23 @@ func Test_HandleWithdrawBalance(t *testing.T) {
 		},
 	}
 	cfg, _ := InitTestConfig()
-	st := mocks.NewStorage(t)
-	a := app.InitApp(st, cfg)
-	hn := handler.InitHandler(a, cfg)
+	order := mocks.NewOrderStorage(t)
+	user := mocks.NewUserStorage(t)
+	withdrawal := mocks.NewWithdrawalStorage(t)
+
+	a := app.App{User: user, Order: order, Withdrawal: withdrawal, Cfg: cfg}
+
+	hn := handler.InitHandler(&a, cfg)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			for _, setting := range tt.mockData {
-				st.On(setting.method, setting.args...).Return(setting.result...).Once()
+				switch setting.storageTyp {
+				case "user":
+					user.On(setting.method, setting.args...).Return(setting.result...).Once()
+				case "withdrawal":
+					withdrawal.On(setting.method, setting.args...).Return(setting.result...).Once()
+				}
 			}
 
 			body := bytes.NewBuffer([]byte{})
@@ -630,13 +660,16 @@ func Test_HandleListwithdrawal(t *testing.T) {
 		},
 	}
 	cfg, _ := InitTestConfig()
-	st := mocks.NewStorage(t)
-	a := app.InitApp(st, cfg)
-	hn := handler.InitHandler(a, cfg)
+	order := mocks.NewOrderStorage(t)
+	user := mocks.NewUserStorage(t)
+	withdrawal := mocks.NewWithdrawalStorage(t)
+
+	a := app.App{User: user, Order: order, Withdrawal: withdrawal, Cfg: cfg}
+	hn := handler.InitHandler(&a, cfg)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			st.On(tt.mockData.method, tt.mockData.args...).Return(tt.mockData.result...).Once()
+			withdrawal.On(tt.mockData.method, tt.mockData.args...).Return(tt.mockData.result...).Once()
 
 			request := httptest.NewRequest(http.MethodGet, "/", nil)
 

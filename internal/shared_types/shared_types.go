@@ -42,15 +42,22 @@ type User struct {
 	CreatedAt      string
 }
 
-type Storage interface {
-	CreateUser(ctx context.Context, creds Credentials) (string, error)
-	GetUser(ctx context.Context, creds Credentials) (User, error)
-	CreateOrder(ctx context.Context, orderID, uid string) error
-	ListOrders(ctx context.Context, uid string) ([]Order, error)
-	GetBalance(ctx context.Context, uid string) (Balance, error)
-	WithdrawBalance(ctx context.Context, uid, orderID string, amount, newCurrent, newWithdrawn float32) error
-	ListWithdrawals(ctx context.Context, uid string) ([]Withdrawal, error)
-	GetUnproccessedOrders(ctx context.Context) ([]Order, error)
+type UserStorage interface {
+	CreateUser(context.Context, Credentials) (string, error)
+	GetUser(context.Context, Credentials) (User, error)
+	GetBalance(context.Context, string) (Balance, error)
+}
+
+type OrderStorage interface {
+	CreateOrder(context.Context, string, string) error
+	ListOrders(context.Context, string) ([]Order, error)
+	GetUnproccessedOrders(context.Context) ([]Order, error)
+	UpdateOrder(context.Context, string, string, float32) error
+}
+
+type WithdrawalStorage interface {
+	WithdrawBalance(context.Context, string, string, float32, float32, float32) error
+	ListWithdrawals(context.Context, string) ([]Withdrawal, error)
 }
 
 type UIDKey struct{}

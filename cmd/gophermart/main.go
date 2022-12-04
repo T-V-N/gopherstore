@@ -28,8 +28,12 @@ func main() {
 
 	defer st.Conn.Close()
 
-	app := app.InitApp(st, cfg)
-	hn := handler.InitHandler(app, cfg)
+	a, err := app.InitApp(st.Conn, cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	hn := handler.InitHandler(a, cfg)
 	authMw := middleware.InitAuth(cfg)
 
 	router := chi.NewRouter()
@@ -49,7 +53,7 @@ func main() {
 		})
 	})
 
-	go service.InitUpdater(*cfg, *st, 1)
+	go service.InitUpdater(*cfg, st.Conn, 1)
 
 	log.Panic(http.ListenAndServe(cfg.RunAddress, router))
 }
