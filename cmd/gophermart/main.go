@@ -26,6 +26,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	defer st.Conn.Close()
+
 	app := app.InitApp(st, cfg)
 	hn := handler.InitHandler(app, cfg)
 	authMw := middleware.InitAuth(cfg)

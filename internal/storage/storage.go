@@ -20,7 +20,7 @@ import (
 )
 
 type Storage struct {
-	conn *pgxpool.Pool
+	Conn *pgxpool.Pool
 	cfg  config.Config
 }
 
@@ -60,7 +60,7 @@ func (st *Storage) CreateUser(ctx context.Context, creds sharedTypes.Credentials
 	RETURNING uid;`
 
 	var id string
-	err := st.conn.QueryRow(ctx, sqlStatement, creds.Login, creds.Password).Scan(&id)
+	err := st.Conn.QueryRow(ctx, sqlStatement, creds.Login, creds.Password).Scan(&id)
 
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -77,7 +77,7 @@ func (st *Storage) GetUser(ctx context.Context, creds sharedTypes.Credentials) (
 	`
 
 	var u sharedTypes.User
-	err := st.conn.QueryRow(ctx, sqlStatement, creds.Login).Scan(&u.UID, &u.Login, &u.PasswordHash, &u.CurrentBalance, &u.Withdrawn)
+	err := st.Conn.QueryRow(ctx, sqlStatement, creds.Login).Scan(&u.UID, &u.Login, &u.PasswordHash, &u.CurrentBalance, &u.Withdrawn)
 
 	if err != nil {
 		return u, err
@@ -95,7 +95,7 @@ func (st *Storage) CreateOrder(ctx context.Context, orderID, uid string) error {
 
 	var ownerID int
 
-	err := st.conn.QueryRow(ctx, sqlCheckExists, orderID).Scan(&id, &ownerID)
+	err := st.Conn.QueryRow(ctx, sqlCheckExists, orderID).Scan(&id, &ownerID)
 	if err == nil {
 		if strconv.Itoa(ownerID) == uid {
 			return utils.ErrAlreadyCreated
@@ -112,7 +112,7 @@ func (st *Storage) CreateOrder(ctx context.Context, orderID, uid string) error {
 	INSERT INTO orders (uid, id, status, accrual)
 	VALUES ($1, $2, 'NEW', 0)`
 
-	_, err = st.conn.Exec(ctx, sqlCreate, uid, orderID)
+	_, err = st.Conn.Exec(ctx, sqlCreate, uid, orderID)
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (st *Storage) ListOrders(ctx context.Context, uid string) ([]sharedTypes.Or
 	SELECT ID, status, accrual, uploaded_at::timestamptz FROM orders WHERE UID = $1 ORDER BY uploaded_at
 	`
 
-	rows, err := st.conn.Query(ctx, sqlStatement, uid)
+	rows, err := st.Conn.Query(ctx, sqlStatement, uid)
 	if err != nil {
 		fmt.Print(err)
 		return nil, err
@@ -161,7 +161,7 @@ func (st *Storage) GetBalance(ctx context.Context, uid string) (sharedTypes.Bala
 	`
 
 	var u sharedTypes.User
-	err := st.conn.QueryRow(ctx, sqlStatement, uid).Scan(&u.UID, &u.Login, &u.PasswordHash, &u.CurrentBalance, &u.Withdrawn)
+	err := st.Conn.QueryRow(ctx, sqlStatement, uid).Scan(&u.UID, &u.Login, &u.PasswordHash, &u.CurrentBalance, &u.Withdrawn)
 
 	if err != nil {
 		return sharedTypes.Balance{}, err
@@ -171,7 +171,7 @@ func (st *Storage) GetBalance(ctx context.Context, uid string) (sharedTypes.Bala
 }
 
 func (st *Storage) WithdrawBalance(ctx context.Context, uid, orderID string, amount, newCurrent, newWithdrawn float32) error {
-	tx, err := st.conn.Begin(ctx)
+	tx, err := st.Conn.Begin(ctx)
 
 	if err != nil {
 		return err
@@ -208,7 +208,7 @@ func (st *Storage) ListWithdrawals(ctx context.Context, uid string) ([]sharedTyp
 	SELECT id, sum, processed_at::timestamptz FROM withdrawals WHERE UID = $1 ORDER BY processed_at
 	`
 
-	rows, err := st.conn.Query(ctx, sqlStatement, uid)
+	rows, err := st.Conn.Query(ctx, sqlStatement, uid)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func (st *Storage) GetUnproccessedOrders(ctx context.Context) ([]sharedTypes.Ord
 	SELECT id, status, accrual, uploaded_at::timestamptz FROM orders WHERE status = 'NEW' or status = 'PROCESSING'
 	`
 
-	rows, err := st.conn.Query(ctx, sqlStatement)
+	rows, err := st.Conn.Query(ctx, sqlStatement)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +273,7 @@ func (st *Storage) UpdateOrder(ctx context.Context, orderID, status string, accr
 	updateOrderSQL := `
 	UPDATE orders SET status = $1, accrual = $2  WHERE id = $3
 	`
-	_, err := st.conn.Exec(ctx, updateOrderSQL, status, accrual, orderID)
+	_, err := st.Conn.Exec(ctx, updateOrderSQL, status, accrual, orderID)
 
 	if err != nil {
 		return err
@@ -285,7 +285,7 @@ func (st *Storage) UpdateOrder(ctx context.Context, orderID, status string, accr
 		WHERE uid = (select uid from orders WHERE id = $2)
 		`
 
-		_, err := st.conn.Exec(ctx, updateBalanceSQL, accrual, orderID)
+		_, err := st.Conn.Exec(ctx, updateBalanceSQL, accrual, orderID)
 
 		if err != nil {
 			return err
