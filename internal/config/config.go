@@ -13,7 +13,7 @@ type Config struct {
 	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" envDefault:"http://127.0.0.1:8888"`
 	JWTExpireTiming      int64  `env:"JWT_EXPIRE_TIMING" envDefault:"10000"`
 	SecretKey            string `env:"SECRET_KEY" envDefault:"secret"`
-	MigrationsPath       string `env:"MIGRATIONS_PATH" envDefault:"../../migrations"`
+	MigrationsPath       string `env:"MIGRATIONS_PATH" envDefault:"migrations"`
 	CompressLevel        int    `env:"COMPRESS_LEVEL" envDefault:"5"`
 }
 
