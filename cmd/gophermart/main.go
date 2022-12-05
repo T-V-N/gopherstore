@@ -2,6 +2,9 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/T-V-N/gopherstore/internal/app"
 	"github.com/T-V-N/gopherstore/internal/config"
@@ -20,6 +23,19 @@ func main() {
 	defer logger.Sync()
 
 	sugar := logger.Sugar()
+
+	sigs := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
+
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-sigs
+		sugar.Errorw("OS Interrupt received",
+			"Signal", sig,
+		)
+		done <- true
+	}()
 
 	cfg, err := config.Init()
 	if err != nil {
@@ -66,7 +82,7 @@ func main() {
 		})
 	})
 
-	go service.InitUpdater(*cfg, st.Conn, 1, sugar)
+	go service.InitUpdater(*cfg, st.Conn, 1, sugar, done)
 
 	err = http.ListenAndServe(cfg.RunAddress, router)
 

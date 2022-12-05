@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/T-V-N/gopherstore/internal/config"
@@ -25,6 +26,7 @@ type Updater struct {
 	order    sharedTypes.OrderStorage
 	user     sharedTypes.UserStorage
 	logger   *zap.SugaredLogger
+	done     chan bool
 }
 
 type AccrualOrder struct {
@@ -77,7 +79,7 @@ func (u *Updater) checkOrder(orderID, status string) {
 	}
 }
 
-func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger *zap.SugaredLogger) {
+func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger *zap.SugaredLogger, done chan bool) {
 	jobCh := make(chan *Job)
 
 	order, err := storage.InitOrder(conn)
@@ -102,36 +104,56 @@ func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger 
 		return
 	}
 
-	u := Updater{JobQueue: []Job{}, cfg: cfg, Ch: jobCh, order: order, user: user, logger: logger}
+	u := Updater{JobQueue: []Job{}, cfg: cfg, Ch: jobCh, order: order, user: user, logger: logger, done: done}
+
+	wg := sync.WaitGroup{}
 
 	for i := 0; i < workerLimit; i++ {
+		wg.Add(1)
+
 		go func() {
-			for job := range jobCh {
-				u.checkOrder(job.OrderID, job.Status)
+			for {
+				select {
+				case job := <-jobCh:
+					u.checkOrder(job.OrderID, job.Status)
+
+				case <-done:
+					wg.Done()
+					return
+				}
 			}
 		}()
 	}
 
 	ticker := time.NewTicker(10 * time.Second)
 
-	for range ticker.C {
-		orders, err := order.GetUnproccessedOrders(context.Background())
+	for {
+		select {
+		case <-ticker.C:
+			orders, err := order.GetUnproccessedOrders(context.Background())
 
-		if err != nil {
-			u.logger.Errorw("Error while getting unprocessed orders",
-				"accrual address", u.cfg.AccrualSystemAddress,
-				"err", err,
-			)
-		}
+			if err != nil {
+				u.logger.Errorw("Error while getting unprocessed orders",
+					"accrual address", u.cfg.AccrualSystemAddress,
+					"err", err,
+				)
+			}
 
-		for _, order := range orders {
-			job := &Job{OrderID: order.Number, Status: order.Status}
+			for _, order := range orders {
+				job := &Job{OrderID: order.Number, Status: order.Status}
 
-			u.logger.Infow("new job for order",
-				"order id", order.Number,
-			)
+				u.logger.Infow("new job for order",
+					"order id", order.Number,
+				)
 
-			jobCh <- job
+				jobCh <- job
+			}
+		case <-done:
+			close(done)
+			wg.Wait()
+			logger.Info("Workers gracefully stopped")
+
+			return
 		}
 	}
 }
