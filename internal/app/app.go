@@ -13,6 +13,7 @@ import (
 	"github.com/T-V-N/gopherstore/internal/utils"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joeljunstrom/go-luhn"
+	"go.uber.org/zap"
 )
 
 type App struct {
@@ -20,14 +21,15 @@ type App struct {
 	Order      sharedTypes.OrderStorage
 	Withdrawal sharedTypes.WithdrawalStorage
 
-	Cfg *config.Config
+	Cfg    *config.Config
+	logger *zap.SugaredLogger
 }
 
 type OrderID struct {
 	Order string `json:"order"`
 }
 
-func InitApp(Conn *pgxpool.Pool, cfg *config.Config) (*App, error) {
+func InitApp(Conn *pgxpool.Pool, cfg *config.Config, logger *zap.SugaredLogger) (*App, error) {
 	user, err := storage.InitUser(Conn)
 
 	if err != nil {
@@ -46,7 +48,7 @@ func InitApp(Conn *pgxpool.Pool, cfg *config.Config) (*App, error) {
 		return nil, err
 	}
 
-	return &App{user, order, withdrawal, cfg}, nil
+	return &App{user, order, withdrawal, cfg, logger}, nil
 }
 
 func (app *App) Register(ctx context.Context, creds sharedTypes.Credentials) (string, error) {

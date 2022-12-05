@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/T-V-N/gopherstore/internal/app"
@@ -10,30 +9,44 @@ import (
 	"github.com/T-V-N/gopherstore/internal/middleware"
 	service "github.com/T-V-N/gopherstore/internal/services"
 	"github.com/T-V-N/gopherstore/internal/storage"
+	"go.uber.org/zap"
 
 	"github.com/go-chi/chi/v5"
 	chiMw "github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+
+	sugar := logger.Sugar()
+
 	cfg, err := config.Init()
 	if err != nil {
-		log.Panic("Unable to load config. Check if it was passed")
+		sugar.Fatalw("Unable to load config",
+			"Error", err,
+		)
 	}
 
 	st, err := storage.InitStorage(*cfg)
 	if err != nil {
-		log.Fatal(err)
+		sugar.Fatalw("Unable to migrate db and init pgx connection",
+			"DB URL", cfg.DatabaseURI,
+			"Migrations path", cfg.MigrationsPath,
+			"Error", err,
+		)
 	}
 
 	defer st.Conn.Close()
 
-	a, err := app.InitApp(st.Conn, cfg)
+	a, err := app.InitApp(st.Conn, cfg, sugar)
 	if err != nil {
-		log.Fatal(err)
+		sugar.Fatalw("Unable to init application",
+			"Error", err,
+		)
 	}
 
-	hn := handler.InitHandler(a, cfg)
+	hn := handler.InitHandler(a, cfg, sugar)
 	authMw := middleware.InitAuth(cfg)
 
 	router := chi.NewRouter()
@@ -53,7 +66,17 @@ func main() {
 		})
 	})
 
-	go service.InitUpdater(*cfg, st.Conn, 1)
+	go service.InitUpdater(*cfg, st.Conn, 1, sugar)
 
-	log.Panic(http.ListenAndServe(cfg.RunAddress, router))
+	err = http.ListenAndServe(cfg.RunAddress, router)
+
+	if err != nil {
+		sugar.Fatalw("Unable to run server",
+			"Error", err,
+		)
+	}
+
+	sugar.Infow("Server started",
+		"Port", cfg.RunAddress,
+	)
 }

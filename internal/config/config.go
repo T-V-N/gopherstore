@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/caarlos0/env/v6"
 )
@@ -22,7 +21,7 @@ func Init() (*Config, error) {
 	err := env.Parse(cfg)
 
 	if err != nil {
-		return nil, fmt.Errorf("error: %w", err)
+		return nil, err
 	}
 
 	flag.StringVar(&cfg.RunAddress, "a", cfg.RunAddress, "server address")

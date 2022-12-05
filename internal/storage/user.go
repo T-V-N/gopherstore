@@ -47,7 +47,10 @@ func (user *User) UpdateUser(ctx context.Context, orderID, uid string, accrual f
 
 	user.lockedMu[uid].Lock()
 
-	defer user.lockedMu[uid].Unlock()
+	defer func() {
+		user.lockedMu[uid].Unlock()
+		user.lockedMu[uid] = nil
+	}()
 
 	updateBalanceSQL := `
 	UPDATE USERS SET current_balance = current_balance + $1

@@ -13,6 +13,7 @@ import (
 	"github.com/T-V-N/gopherstore/internal/config"
 	sharedTypes "github.com/T-V-N/gopherstore/internal/shared_types"
 	"github.com/T-V-N/gopherstore/internal/utils"
+	"go.uber.org/zap"
 )
 
 type AppInterface interface {
@@ -26,12 +27,13 @@ type AppInterface interface {
 }
 
 type Handler struct {
-	app AppInterface
-	Cfg *config.Config
+	app    AppInterface
+	Cfg    *config.Config
+	logger *zap.SugaredLogger
 }
 
-func InitHandler(a AppInterface, cfg *config.Config) *Handler {
-	return &Handler{a, cfg}
+func InitHandler(a AppInterface, cfg *config.Config, logger *zap.SugaredLogger) *Handler {
+	return &Handler{a, cfg, logger}
 }
 
 func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {

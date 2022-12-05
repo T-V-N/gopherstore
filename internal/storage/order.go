@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	sharedTypes "github.com/T-V-N/gopherstore/internal/shared_types"
@@ -62,7 +61,6 @@ func (order *Order) ListOrders(ctx context.Context, uid string) ([]sharedTypes.O
 
 	rows, err := order.Conn.Query(ctx, sqlStatement, uid)
 	if err != nil {
-		fmt.Print(err)
 		return nil, err
 	}
 
