@@ -107,6 +107,7 @@ func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger 
 	u := Updater{JobQueue: []Job{}, cfg: cfg, Ch: jobCh, order: order, user: user, logger: logger, done: done}
 
 	wg := sync.WaitGroup{}
+	sigCh := make(chan struct{})
 
 	for i := 0; i < workerLimit; i++ {
 		wg.Add(1)
@@ -116,8 +117,7 @@ func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger 
 				select {
 				case job := <-jobCh:
 					u.checkOrder(job.OrderID, job.Status)
-
-				case <-done:
+				case <-sigCh:
 					wg.Done()
 					return
 				}
@@ -149,7 +149,7 @@ func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger 
 				jobCh <- job
 			}
 		case <-done:
-			close(done)
+			close(sigCh)
 			wg.Wait()
 			logger.Info("Workers gracefully stopped")
 
