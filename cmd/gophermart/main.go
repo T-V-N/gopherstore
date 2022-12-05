@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 
@@ -23,9 +24,6 @@ func main() {
 	defer logger.Sync()
 
 	sugar := logger.Sugar()
-
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
 
 	cfg, err := config.Init()
 	if err != nil {
@@ -72,6 +70,9 @@ func main() {
 		})
 	})
 
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	defer stop()
+
 	go service.InitUpdater(*cfg, st.Conn, 1, sugar, ctx)
 
 	server := http.Server{
@@ -79,22 +80,19 @@ func main() {
 		Addr:    cfg.RunAddress,
 	}
 
-	err = server.Shutdown(ctx)
-	if err != nil {
-		sugar.Fatalw("Unable to shutdown server",
-			"Error", err,
-		)
-	}
-
 	sugar.Infow("Starting server",
 		"Port", cfg.RunAddress,
 	)
 
-	err = server.ListenAndServe()
+	go server.ListenAndServe()
+
+	<-ctx.Done()
+
+	err = server.Shutdown(context.Background())
 
 	if err != nil {
-		sugar.Info("Server stopped",
-			"MSG", err,
+		sugar.Fatalw("Unable to shutdown server",
+			"Error", err,
 		)
 	}
 }
