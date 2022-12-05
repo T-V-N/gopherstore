@@ -1,8 +1,8 @@
 package main
 
 import (
+	"context"
 	"net/http"
-	"os"
 	"os/signal"
 	"syscall"
 
@@ -24,18 +24,8 @@ func main() {
 
 	sugar := logger.Sugar()
 
-	sigs := make(chan os.Signal, 1)
-	done := make(chan bool, 1)
-
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		sig := <-sigs
-		sugar.Errorw("OS Interrupt received",
-			"Signal", sig,
-		)
-		done <- true
-	}()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	cfg, err := config.Init()
 	if err != nil {
@@ -82,17 +72,29 @@ func main() {
 		})
 	})
 
-	go service.InitUpdater(*cfg, st.Conn, 1, sugar, done)
+	go service.InitUpdater(*cfg, st.Conn, 1, sugar, ctx)
 
-	err = http.ListenAndServe(cfg.RunAddress, router)
+	server := http.Server{
+		Handler: router,
+		Addr:    cfg.RunAddress,
+	}
 
+	err = server.Shutdown(ctx)
 	if err != nil {
-		sugar.Fatalw("Unable to run server",
+		sugar.Fatalw("Unable to shutdown server",
 			"Error", err,
 		)
 	}
 
-	sugar.Infow("Server started",
+	sugar.Infow("Starting server",
 		"Port", cfg.RunAddress,
 	)
+
+	err = server.ListenAndServe()
+
+	if err != nil {
+		sugar.Info("Server stopped",
+			"MSG", err,
+		)
+	}
 }

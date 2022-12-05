@@ -79,7 +79,7 @@ func (u *Updater) checkOrder(orderID, status string) {
 	}
 }
 
-func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger *zap.SugaredLogger, done chan bool) {
+func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger *zap.SugaredLogger, ctx context.Context) {
 	jobCh := make(chan *Job)
 
 	order, err := storage.InitOrder(conn)
@@ -104,10 +104,9 @@ func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger 
 		return
 	}
 
-	u := Updater{JobQueue: []Job{}, cfg: cfg, Ch: jobCh, order: order, user: user, logger: logger, done: done}
+	u := Updater{JobQueue: []Job{}, cfg: cfg, Ch: jobCh, order: order, user: user, logger: logger}
 
 	wg := sync.WaitGroup{}
-	sigCh := make(chan struct{})
 
 	for i := 0; i < workerLimit; i++ {
 		wg.Add(1)
@@ -117,7 +116,7 @@ func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger 
 				select {
 				case job := <-jobCh:
 					u.checkOrder(job.OrderID, job.Status)
-				case <-sigCh:
+				case <-ctx.Done():
 					wg.Done()
 					return
 				}
@@ -148,8 +147,7 @@ func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger 
 
 				jobCh <- job
 			}
-		case <-done:
-			close(sigCh)
+		case <-ctx.Done():
 			wg.Wait()
 			logger.Info("Workers gracefully stopped")
 
