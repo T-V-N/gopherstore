@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -20,13 +22,12 @@ type Job struct {
 }
 
 type Updater struct {
-	JobQueue []Job
-	Ch       chan *Job
-	cfg      config.Config
-	order    sharedTypes.OrderStorage
-	user     sharedTypes.UserStorage
-	logger   *zap.SugaredLogger
-	done     chan bool
+	Ch     chan *Job
+	cfg    config.Config
+	order  sharedTypes.OrderStorage
+	user   sharedTypes.UserStorage
+	logger *zap.SugaredLogger
+	done   chan bool
 }
 
 type AccrualOrder struct {
@@ -51,6 +52,27 @@ func (u *Updater) checkOrder(orderID, status string) {
 		return
 	}
 
+	if r.StatusCode == http.StatusTooManyRequests {
+		delay, err := strconv.Atoi(r.Header.Get("Retry-After"))
+		if err != nil {
+			u.logger.Infow("Unable to parse retry-after header")
+			return
+		}
+
+		go func() {
+			job := &Job{OrderID: orderID, Status: status}
+
+			u.logger.Infow("job delayed by 60 sec",
+				"order id", orderID,
+			)
+
+			time.Sleep(time.Duration(delay) * time.Second)
+			u.Ch <- job
+		}()
+
+		return
+	}
+
 	defer r.Body.Close()
 
 	var o AccrualOrder
@@ -64,7 +86,7 @@ func (u *Updater) checkOrder(orderID, status string) {
 
 		return
 	}
-
+	fmt.Print(ctx)
 	if o.Status != status {
 		err = u.order.UpdateOrder(ctx, orderID, o.Status, o.Accrual, u.user)
 		if err != nil {
@@ -104,7 +126,7 @@ func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger 
 		return
 	}
 
-	u := Updater{JobQueue: []Job{}, cfg: cfg, Ch: jobCh, order: order, user: user, logger: logger}
+	u := Updater{cfg: cfg, Ch: jobCh, order: order, user: user, logger: logger}
 
 	wg := sync.WaitGroup{}
 
@@ -124,7 +146,7 @@ func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger 
 		}()
 	}
 
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(10 * time.Second / 1000)
 
 	for {
 		select {
