@@ -43,7 +43,7 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(h.Cfg.ContextCancelTimeout)*time.Second)
 	defer cancel()
 
 	cred := sharedTypes.Credentials{}
@@ -88,7 +88,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(h.Cfg.ContextCancelTimeout)*time.Second)
 	defer cancel()
 
 	cred := sharedTypes.Credentials{}
@@ -124,7 +124,7 @@ func (h *Handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(h.Cfg.ContextCancelTimeout)*time.Second)
 	defer cancel()
 
 	body, err := io.ReadAll(r.Body)
@@ -157,7 +157,7 @@ func (h *Handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleListOrder(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(h.Cfg.ContextCancelTimeout)*time.Second)
 	defer cancel()
 
 	uid, _ := r.Context().Value(sharedTypes.UIDKey{}).(string)
@@ -179,7 +179,7 @@ func (h *Handler) HandleListOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(h.Cfg.ContextCancelTimeout)*time.Second)
 	defer cancel()
 
 	uid, _ := r.Context().Value(sharedTypes.UIDKey{}).(string)
@@ -195,7 +195,7 @@ func (h *Handler) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleBalanceWithdraw(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(h.Cfg.ContextCancelTimeout)*time.Second)
 	defer cancel()
 
 	uid, _ := r.Context().Value(sharedTypes.UIDKey{}).(string)
@@ -228,7 +228,7 @@ func (h *Handler) HandleBalanceWithdraw(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handler) HandleListWithdrawals(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(h.Cfg.ContextCancelTimeout)*time.Second)
 	defer cancel()
 
 	uid, _ := r.Context().Value(sharedTypes.UIDKey{}).(string)

@@ -22,12 +22,13 @@ type Job struct {
 }
 
 type Updater struct {
-	Ch     chan *Job
-	cfg    config.Config
-	order  sharedTypes.OrderStorage
-	user   sharedTypes.UserStorage
-	logger *zap.SugaredLogger
-	done   chan bool
+	Ch              chan *Job
+	cfg             config.Config
+	order           sharedTypes.OrderStorage
+	user            sharedTypes.UserStorage
+	logger          *zap.SugaredLogger
+	done            chan bool
+	CheckOrderDelay uint
 }
 
 type AccrualOrder struct {
@@ -37,7 +38,7 @@ type AccrualOrder struct {
 }
 
 func (u *Updater) checkOrder(orderID, status string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(u.CheckOrderDelay)*time.Second)
 	defer cancel()
 
 	r, err := http.Get(u.cfg.AccrualSystemAddress + "/api/orders/" + orderID)
@@ -126,7 +127,7 @@ func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger 
 		return
 	}
 
-	u := Updater{cfg: cfg, Ch: jobCh, order: order, user: user, logger: logger}
+	u := Updater{cfg: cfg, Ch: jobCh, order: order, user: user, logger: logger, CheckOrderDelay: cfg.CheckOrderDelay}
 
 	wg := sync.WaitGroup{}
 
@@ -146,7 +147,7 @@ func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger 
 		}()
 	}
 
-	ticker := time.NewTicker(10 * time.Second / 1000)
+	ticker := time.NewTicker(time.Duration(cfg.CheckOrderInterval) * time.Second)
 
 	for {
 		select {
