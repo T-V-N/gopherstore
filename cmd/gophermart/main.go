@@ -43,14 +43,31 @@ func main() {
 
 	defer st.Conn.Close()
 
-	a, err := app.InitApp(st.Conn, cfg, sugar)
+	withdrawalApp, err := app.InitWithdrawal(st.Conn, cfg, sugar)
 	if err != nil {
 		sugar.Fatalw("Unable to init application",
 			"Error", err,
 		)
 	}
 
-	hn := handler.InitHandler(a, cfg, sugar)
+	userApp, err := app.InitUserApp(st.Conn, *withdrawalApp, cfg, sugar)
+	if err != nil {
+		sugar.Fatalw("Unable to init application",
+			"Error", err,
+		)
+	}
+
+	orderApp, err := app.InitOrderApp(st.Conn, cfg, sugar)
+	if err != nil {
+		sugar.Fatalw("Unable to init application",
+			"Error", err,
+		)
+	}
+
+	userHn := handler.InitUserHandler(userApp, cfg, sugar)
+	orderHn := handler.InitOrderHandler(orderApp, cfg, sugar)
+	withdrawalHn := handler.InitWithdrawalHandler(withdrawalApp, cfg, sugar)
+
 	authMw := middleware.InitAuth(cfg)
 
 	router := chi.NewRouter()
@@ -58,15 +75,15 @@ func main() {
 	router.Use(middleware.GzipHandle)
 
 	router.Route("/api/user", func(userRouter chi.Router) {
-		userRouter.Post("/login", hn.HandleLogin)
-		userRouter.Post("/register", hn.HandleRegister)
+		userRouter.Post("/login", userHn.HandleLogin)
+		userRouter.Post("/register", userHn.HandleRegister)
 		userRouter.Group(func(r chi.Router) {
 			r.Use(authMw)
-			r.Post("/orders", hn.HandleCreateOrder)
-			r.Get("/orders", hn.HandleListOrder)
-			r.Get("/balance", hn.HandleGetBalance)
-			r.Post("/balance/withdraw", hn.HandleBalanceWithdraw)
-			r.Get("/withdrawals", hn.HandleListWithdrawals)
+			r.Post("/orders", orderHn.HandleCreateOrder)
+			r.Get("/orders", orderHn.HandleListOrder)
+			r.Get("/balance", userHn.HandleGetBalance)
+			r.Post("/balance/withdraw", userHn.HandleBalanceWithdraw)
+			r.Get("/withdrawals", withdrawalHn.HandleListWithdrawals)
 		})
 	})
 

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
@@ -16,27 +15,24 @@ import (
 	"go.uber.org/zap"
 )
 
-type AppInterface interface {
-	CreateOrder(ctx context.Context, orderID string, uid string) error
-	GetBalance(ctx context.Context, uid string) (sharedTypes.Balance, error)
-	GetListWithdrawals(ctx context.Context, uid string) ([]sharedTypes.Withdrawal, error)
-	ListOrders(ctx context.Context, uid string) ([]sharedTypes.Order, error)
-	Login(ctx context.Context, creds sharedTypes.Credentials) (string, error)
+type UserAppInterface interface {
 	Register(ctx context.Context, creds sharedTypes.Credentials) (string, error)
+	Login(ctx context.Context, creds sharedTypes.Credentials) (string, error)
+	GetBalance(ctx context.Context, uid string) (sharedTypes.Balance, error)
 	WithdrawBalance(ctx context.Context, uid string, orderID string, amount float32) error
 }
 
-type Handler struct {
-	app    AppInterface
+type UserHandler struct {
+	app    UserAppInterface
 	Cfg    *config.Config
 	logger *zap.SugaredLogger
 }
 
-func InitHandler(a AppInterface, cfg *config.Config, logger *zap.SugaredLogger) *Handler {
-	return &Handler{a, cfg, logger}
+func InitUserHandler(a UserAppInterface, cfg *config.Config, logger *zap.SugaredLogger) *UserHandler {
+	return &UserHandler{a, cfg, logger}
 }
 
-func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	cp := r.Header.Get("Content-Type")
 	if cp != "application/json" {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -81,7 +77,7 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	cp := r.Header.Get("Content-Type")
 	if cp != "application/json" {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -117,68 +113,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
-	cp := r.Header.Get("Content-Type")
-	if cp != "text/plain" {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(h.Cfg.ContextCancelTimeout)*time.Second)
-	defer cancel()
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil || len(body) == 0 {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
-	}
-
-	uid, _ := r.Context().Value(sharedTypes.UIDKey{}).(string)
-	err = h.app.CreateOrder(ctx, string(body), uid)
-
-	if err != nil {
-		switch {
-		case errors.Is(err, utils.ErrAlreadyCreated):
-			http.Error(w, err.Error(), http.StatusOK)
-			return
-		case errors.Is(err, utils.ErrDuplicate):
-			http.Error(w, err.Error(), http.StatusConflict)
-			return
-		case errors.Is(err, utils.ErrWrongFormat):
-			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-			return
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-
-	w.WriteHeader(http.StatusAccepted)
-}
-
-func (h *Handler) HandleListOrder(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(h.Cfg.ContextCancelTimeout)*time.Second)
-	defer cancel()
-
-	uid, _ := r.Context().Value(sharedTypes.UIDKey{}).(string)
-
-	list, err := h.app.ListOrders(ctx, uid)
-
-	if err == utils.ErrNoData {
-		http.Error(w, "No content", http.StatusNoContent)
-
-		return
-	}
-
-	w.Header().Add("Content-Type", "application/json")
-
-	if err != json.NewEncoder(w).Encode(list) {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-func (h *Handler) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(h.Cfg.ContextCancelTimeout)*time.Second)
 	defer cancel()
 
@@ -194,7 +129,7 @@ func (h *Handler) HandleGetBalance(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) HandleBalanceWithdraw(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) HandleBalanceWithdraw(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(h.Cfg.ContextCancelTimeout)*time.Second)
 	defer cancel()
 
@@ -225,31 +160,4 @@ func (h *Handler) HandleBalanceWithdraw(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusOK)
-}
-
-func (h *Handler) HandleListWithdrawals(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(h.Cfg.ContextCancelTimeout)*time.Second)
-	defer cancel()
-
-	uid, _ := r.Context().Value(sharedTypes.UIDKey{}).(string)
-
-	withdrawalsList, err := h.app.GetListWithdrawals(ctx, uid)
-	if err != nil {
-		switch {
-		case errors.Is(err, utils.ErrNoData):
-			http.Error(w, err.Error(), http.StatusNoContent)
-			return
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-
-	w.Header().Add("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(withdrawalsList)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 }
