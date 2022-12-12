@@ -174,6 +174,7 @@ func InitUpdater(ctx context.Context, cfg config.Config, conn *pgxpool.Pool, wor
 				jobCh <- job
 			}
 		case <-ctx.Done():
+			close(jobCh)
 			wg.Wait()
 			logger.Info("Workers gracefully stopped")
 
