@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/T-V-N/gopherstore/internal/app"
 	"github.com/T-V-N/gopherstore/internal/config"
@@ -104,8 +105,12 @@ func main() {
 	go server.ListenAndServe()
 
 	<-ctx.Done()
+	stop()
 
-	err = server.Shutdown(context.Background())
+	shutdownCtx, stopShutdownCtx := context.WithTimeout(context.Background(), time.Duration(cfg.ContextCancelTimeout)*time.Second)
+	defer stopShutdownCtx()
+
+	err = server.Shutdown(shutdownCtx)
 
 	if err != nil {
 		sugar.Fatalw("Unable to shutdown server",
