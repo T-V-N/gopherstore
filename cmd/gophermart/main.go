@@ -15,6 +15,7 @@ import (
 	service "github.com/T-V-N/gopherstore/internal/services"
 	"github.com/T-V-N/gopherstore/internal/storage"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
 func main() {
@@ -65,15 +66,11 @@ func main() {
 	userHn := handler.InitUserHandler(userApp, cfg, sugar)
 	orderHn := handler.InitOrderHandler(orderApp, cfg, sugar)
 	withdrawalHn := handler.InitWithdrawalHandler(withdrawalApp, cfg, sugar)
-
 	authMw := middleware.InitAuth(cfg)
-
 	router := initRouter(cfg, authMw, userHn, orderHn, withdrawalHn)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	defer stop()
-
-	go service.InitUpdater(ctx, *cfg, st.Conn, cfg.WorkerLimit, sugar)
 
 	server := http.Server{
 		Handler: router,
@@ -84,9 +81,17 @@ func main() {
 		"Port", cfg.RunAddress,
 	)
 
-	go server.ListenAndServe()
+	gr, grCtx := errgroup.WithContext(ctx)
 
-	<-ctx.Done()
+	gr.Go(func() error {
+		return service.InitUpdater(grCtx, *cfg, st.Conn, cfg.WorkerLimit, sugar)
+	})
+	gr.Go(server.ListenAndServe)
+
+	if err := gr.Wait(); err != nil {
+		sugar.Errorw("Server or updater crashed", "Error", err)
+		return
+	}
 	stop()
 
 	shutdownCtx, stopShutdownCtx := context.WithTimeout(context.Background(), time.Duration(cfg.ContextCancelTimeout)*time.Second)
