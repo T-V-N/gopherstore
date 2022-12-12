@@ -15,9 +15,6 @@ import (
 	service "github.com/T-V-N/gopherstore/internal/services"
 	"github.com/T-V-N/gopherstore/internal/storage"
 	"go.uber.org/zap"
-
-	"github.com/go-chi/chi/v5"
-	chiMw "github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
@@ -71,22 +68,7 @@ func main() {
 
 	authMw := middleware.InitAuth(cfg)
 
-	router := chi.NewRouter()
-	router.Use(chiMw.Compress(cfg.CompressLevel))
-	router.Use(middleware.GzipHandle)
-
-	router.Route("/api/user", func(userRouter chi.Router) {
-		userRouter.Post("/login", userHn.HandleLogin)
-		userRouter.Post("/register", userHn.HandleRegister)
-		userRouter.Group(func(r chi.Router) {
-			r.Use(authMw)
-			r.Post("/orders", orderHn.HandleCreateOrder)
-			r.Get("/orders", orderHn.HandleListOrder)
-			r.Get("/balance", userHn.HandleGetBalance)
-			r.Post("/balance/withdraw", userHn.HandleBalanceWithdraw)
-			r.Get("/withdrawals", withdrawalHn.HandleListWithdrawals)
-		})
-	})
+	router := initRouter(cfg, authMw, userHn, orderHn, withdrawalHn)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	defer stop()
@@ -113,7 +95,7 @@ func main() {
 	err = server.Shutdown(shutdownCtx)
 
 	if err != nil {
-		sugar.Fatalw("Unable to shutdown server",
+		sugar.Errorw("Unable to shutdown server",
 			"Error", err,
 		)
 	}
