@@ -42,25 +42,41 @@ type User struct {
 	CreatedAt      string
 }
 
-type UserStorage interface {
+type UserStorager interface {
 	CreateUser(context.Context, Credentials) (string, error)
 	GetUser(context.Context, Credentials) (User, error)
 	GetBalance(context.Context, string) (Balance, error)
 	GetBalanceAndLock(context.Context, string) (Balance, error)
-	WithdrawBalance(context.Context, string, string, float32, float32, float32, WithdrawalStorage) error
+	WithdrawBalance(context.Context, string, string, float32, float32, float32, WithdrawalStorager) error
 	UpdateUser(context.Context, string, string, float32) error
 }
 
-type OrderStorage interface {
+type OrderStorager interface {
 	CreateOrder(context.Context, string, string) error
 	ListOrders(context.Context, string) ([]Order, error)
 	GetUnproccessedOrders(context.Context) ([]Order, error)
-	UpdateOrder(context.Context, string, string, float32, UserStorage) error
+	UpdateOrder(context.Context, string, string, float32, UserStorager) error
 }
 
-type WithdrawalStorage interface {
+type WithdrawalStorager interface {
 	ListWithdrawals(context.Context, string) ([]Withdrawal, error)
 	CreateWithdrawal(context.Context, string, float32, string) error
+}
+
+type OrderApper interface {
+	CreateOrder(ctx context.Context, orderID string, uid string) error
+	ListOrders(ctx context.Context, uid string) ([]Order, error)
+}
+
+type UserApper interface {
+	Register(ctx context.Context, creds Credentials) (string, error)
+	Login(ctx context.Context, creds Credentials) (string, error)
+	GetBalance(ctx context.Context, uid string) (Balance, error)
+	WithdrawBalance(ctx context.Context, uid string, orderID string, amount float32) error
+}
+
+type WithdrawalApper interface {
+	GetListWithdrawals(ctx context.Context, uid string) ([]Withdrawal, error)
 }
 
 type UIDKey struct{}

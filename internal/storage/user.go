@@ -108,7 +108,7 @@ func (user *User) GetBalanceAndLock(ctx context.Context, uid string) (sharedType
 	return user.GetBalance(ctx, uid)
 }
 
-func (user *User) WithdrawBalance(ctx context.Context, uid, orderID string, amount, newCurrent, newWithdrawn float32, withdrawal sharedTypes.WithdrawalStorage) error {
+func (user *User) WithdrawBalance(ctx context.Context, uid, orderID string, amount, newCurrent, newWithdrawn float32, withdrawal sharedTypes.WithdrawalStorager) error {
 	defer user.lockedMu[uid].Unlock()
 
 	sqlUpdateUser := `	

@@ -24,8 +24,8 @@ type Job struct {
 type Updater struct {
 	Ch              chan *Job
 	cfg             config.Config
-	order           sharedTypes.OrderStorage
-	user            sharedTypes.UserStorage
+	order           sharedTypes.OrderStorager
+	user            sharedTypes.UserStorager
 	logger          *zap.SugaredLogger
 	done            chan bool
 	CheckOrderDelay uint

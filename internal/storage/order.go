@@ -120,7 +120,7 @@ func (order *Order) GetUnproccessedOrders(ctx context.Context) ([]sharedTypes.Or
 	return orders, nil
 }
 
-func (order *Order) UpdateOrder(ctx context.Context, orderID, status string, accrual float32, user sharedTypes.UserStorage) error {
+func (order *Order) UpdateOrder(ctx context.Context, orderID, status string, accrual float32, user sharedTypes.UserStorager) error {
 	updateOrderSQL := `
 	UPDATE orders SET status = $1, accrual = $2  WHERE id = $3
 	returning uid;

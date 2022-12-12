@@ -75,11 +75,11 @@ func (_m *OrderStorage) ListOrders(_a0 context.Context, _a1 string) ([]sharedtyp
 }
 
 // UpdateOrder provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4
-func (_m *OrderStorage) UpdateOrder(_a0 context.Context, _a1 string, _a2 string, _a3 float32, _a4 sharedtypes.UserStorage) error {
+func (_m *OrderStorage) UpdateOrder(_a0 context.Context, _a1 string, _a2 string, _a3 float32, _a4 sharedtypes.UserStorager) error {
 	ret := _m.Called(_a0, _a1, _a2, _a3, _a4)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, float32, sharedtypes.UserStorage) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, float32, sharedtypes.UserStorager) error); ok {
 		r0 = rf(_a0, _a1, _a2, _a3, _a4)
 	} else {
 		r0 = ret.Error(0)

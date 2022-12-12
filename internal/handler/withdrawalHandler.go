@@ -13,17 +13,13 @@ import (
 	"go.uber.org/zap"
 )
 
-type WithdrawalAppInterface interface {
-	GetListWithdrawals(ctx context.Context, uid string) ([]sharedTypes.Withdrawal, error)
-}
-
 type WithdrawalHandler struct {
-	app    WithdrawalAppInterface
+	app    sharedTypes.WithdrawalApper
 	Cfg    *config.Config
 	logger *zap.SugaredLogger
 }
 
-func InitWithdrawalHandler(a WithdrawalAppInterface, cfg *config.Config, logger *zap.SugaredLogger) *WithdrawalHandler {
+func InitWithdrawalHandler(a sharedTypes.WithdrawalApper, cfg *config.Config, logger *zap.SugaredLogger) *WithdrawalHandler {
 	return &WithdrawalHandler{a, cfg, logger}
 }
 

@@ -12,7 +12,7 @@ import (
 )
 
 type WithdrawalApp struct {
-	Withdrawal sharedTypes.WithdrawalStorage
+	Withdrawal sharedTypes.WithdrawalStorager
 	Cfg        *config.Config
 	logger     *zap.SugaredLogger
 }

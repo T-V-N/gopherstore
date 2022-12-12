@@ -15,20 +15,13 @@ import (
 	"go.uber.org/zap"
 )
 
-type UserAppInterface interface {
-	Register(ctx context.Context, creds sharedTypes.Credentials) (string, error)
-	Login(ctx context.Context, creds sharedTypes.Credentials) (string, error)
-	GetBalance(ctx context.Context, uid string) (sharedTypes.Balance, error)
-	WithdrawBalance(ctx context.Context, uid string, orderID string, amount float32) error
-}
-
 type UserHandler struct {
-	app    UserAppInterface
+	app    sharedTypes.UserApper
 	Cfg    *config.Config
 	logger *zap.SugaredLogger
 }
 
-func InitUserHandler(a UserAppInterface, cfg *config.Config, logger *zap.SugaredLogger) *UserHandler {
+func InitUserHandler(a sharedTypes.UserApper, cfg *config.Config, logger *zap.SugaredLogger) *UserHandler {
 	return &UserHandler{a, cfg, logger}
 }
 

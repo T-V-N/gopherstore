@@ -14,8 +14,8 @@ import (
 )
 
 type UserApp struct {
-	User       sharedTypes.UserStorage
-	Withdrawal sharedTypes.WithdrawalStorage
+	User       sharedTypes.UserStorager
+	Withdrawal sharedTypes.WithdrawalStorager
 	Cfg        *config.Config
 	logger     *zap.SugaredLogger
 }

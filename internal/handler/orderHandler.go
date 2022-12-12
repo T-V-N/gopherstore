@@ -14,18 +14,13 @@ import (
 	"go.uber.org/zap"
 )
 
-type OrderAppInterface interface {
-	CreateOrder(ctx context.Context, orderID string, uid string) error
-	ListOrders(ctx context.Context, uid string) ([]sharedTypes.Order, error)
-}
-
 type OrderHandler struct {
-	app    OrderAppInterface
+	app    sharedTypes.OrderApper
 	Cfg    *config.Config
 	logger *zap.SugaredLogger
 }
 
-func InitOrderHandler(a OrderAppInterface, cfg *config.Config, logger *zap.SugaredLogger) *OrderHandler {
+func InitOrderHandler(a sharedTypes.OrderApper, cfg *config.Config, logger *zap.SugaredLogger) *OrderHandler {
 	return &OrderHandler{a, cfg, logger}
 }
 

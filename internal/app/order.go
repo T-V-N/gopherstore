@@ -16,7 +16,7 @@ import (
 )
 
 type OrderApp struct {
-	Order  sharedTypes.OrderStorage
+	Order  sharedTypes.OrderStorager
 	Cfg    *config.Config
 	logger *zap.SugaredLogger
 }

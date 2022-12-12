@@ -113,11 +113,11 @@ func (_m *UserStorage) UpdateUser(_a0 context.Context, _a1 string, _a2 string, _
 }
 
 // WithdrawBalance provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4, _a5, _a6
-func (_m *UserStorage) WithdrawBalance(_a0 context.Context, _a1 string, _a2 string, _a3 float32, _a4 float32, _a5 float32, _a6 sharedtypes.WithdrawalStorage) error {
+func (_m *UserStorage) WithdrawBalance(_a0 context.Context, _a1 string, _a2 string, _a3 float32, _a4 float32, _a5 float32, _a6 sharedtypes.WithdrawalStorager) error {
 	ret := _m.Called(_a0, _a1, _a2, _a3, _a4, _a5, _a6)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, float32, float32, float32, sharedtypes.WithdrawalStorage) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, float32, float32, float32, sharedtypes.WithdrawalStorager) error); ok {
 		r0 = rf(_a0, _a1, _a2, _a3, _a4, _a5, _a6)
 	} else {
 		r0 = ret.Error(0)
