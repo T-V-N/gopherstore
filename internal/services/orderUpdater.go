@@ -152,7 +152,10 @@ func InitUpdater(ctx context.Context, cfg config.Config, conn *pgxpool.Pool, wor
 	for {
 		select {
 		case <-ticker.C:
-			orders, err := order.GetUnproccessedOrders(context.Background())
+			requestCtx, stop := context.WithTimeout(ctx, time.Duration(cfg.CheckOrderDelay)*time.Second)
+			defer stop()
+
+			orders, err := order.GetUnproccessedOrders(requestCtx)
 
 			if err != nil {
 				u.logger.Errorw("Error while getting unprocessed orders",
