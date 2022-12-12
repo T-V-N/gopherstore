@@ -1,4 +1,4 @@
-package main
+package router
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ import (
 	chiMw "github.com/go-chi/chi/v5/middleware"
 )
 
-func initRouter(cfg *config.Config,
+func InitRouter(cfg *config.Config,
 	authMw func(next http.Handler) http.Handler,
 	userHn *handler.UserHandler,
 	orderHn *handler.OrderHandler,

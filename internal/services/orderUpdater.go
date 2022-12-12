@@ -102,7 +102,7 @@ func (u *Updater) checkOrder(orderID, status string) {
 	}
 }
 
-func InitUpdater(ctx context.Context, cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger *zap.SugaredLogger) error {
+func InitUpdater(ctx context.Context, cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger *zap.SugaredLogger) {
 	jobCh := make(chan *Job)
 
 	order, err := storage.InitOrder(conn)
@@ -113,7 +113,7 @@ func InitUpdater(ctx context.Context, cfg config.Config, conn *pgxpool.Pool, wor
 			"err", err,
 		)
 
-		return err
+		return
 	}
 
 	user, err := storage.InitUser(conn)
@@ -124,7 +124,7 @@ func InitUpdater(ctx context.Context, cfg config.Config, conn *pgxpool.Pool, wor
 			"err", err,
 		)
 
-		return err
+		return
 	}
 
 	u := Updater{cfg: cfg, Ch: jobCh, order: order, user: user, logger: logger, CheckOrderDelay: cfg.CheckOrderDelay}
@@ -178,7 +178,7 @@ func InitUpdater(ctx context.Context, cfg config.Config, conn *pgxpool.Pool, wor
 			wg.Wait()
 			logger.Info("Workers gracefully stopped")
 
-			return nil
+			return
 		}
 	}
 }
