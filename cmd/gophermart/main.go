@@ -90,7 +90,13 @@ func main() {
 		gr.Add(1)
 	}()
 
-	go server.ListenAndServe()
+	go func() {
+		err = server.ListenAndServe()
+
+		if err != nil {
+			sugar.Error("Unable to run server")
+		}
+	}()
 	gr.Add(1)
 
 	<-ctx.Done()
