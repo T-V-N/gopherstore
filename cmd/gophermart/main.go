@@ -90,7 +90,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	defer stop()
 
-	go service.InitUpdater(*cfg, st.Conn, cfg.WorkerLimit, sugar, ctx)
+	go service.InitUpdater(ctx, *cfg, st.Conn, cfg.WorkerLimit, sugar)
 
 	server := http.Server{
 		Handler: router,

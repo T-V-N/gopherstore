@@ -102,7 +102,7 @@ func (u *Updater) checkOrder(orderID, status string) {
 	}
 }
 
-func InitUpdater(cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger *zap.SugaredLogger, ctx context.Context) {
+func InitUpdater(ctx context.Context, cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger *zap.SugaredLogger) {
 	jobCh := make(chan *Job)
 
 	order, err := storage.InitOrder(conn)
