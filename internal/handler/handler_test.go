@@ -323,7 +323,7 @@ func Test_HandleCreateOrder(t *testing.T) {
 		},
 	}
 	cfg, _ := InitTestConfig()
-	order := mocks.NewOrderStorage(t)
+	order := mocks.NewOrderStorager(t)
 
 	a := app.OrderApp{Order: order, Cfg: cfg}
 	hn := handler.InitOrderHandler(&a, cfg, &zap.SugaredLogger{})
@@ -397,7 +397,7 @@ func Test_HandleListOrder(t *testing.T) {
 		},
 	}
 	cfg, _ := InitTestConfig()
-	order := mocks.NewOrderStorage(t)
+	order := mocks.NewOrderStorager(t)
 
 	a := app.OrderApp{Order: order, Cfg: cfg}
 	hn := handler.InitOrderHandler(&a, cfg, &zap.SugaredLogger{})

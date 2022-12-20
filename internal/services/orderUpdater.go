@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/T-V-N/gopherstore/internal/config"
 	sharedTypes "github.com/T-V-N/gopherstore/internal/shared_types"
-	"github.com/T-V-N/gopherstore/internal/storage"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
@@ -24,11 +22,12 @@ type Job struct {
 type Updater struct {
 	Ch              chan *Job
 	cfg             config.Config
-	order           sharedTypes.OrderStorager
-	user            sharedTypes.UserStorager
+	order           sharedTypes.OrderApper
+	user            sharedTypes.UserApper
 	logger          *zap.SugaredLogger
 	done            chan bool
 	CheckOrderDelay uint
+	userApp         *sharedTypes.UserApper
 }
 
 type AccrualOrder struct {
@@ -87,9 +86,9 @@ func (u *Updater) checkOrder(orderID, status string) {
 
 		return
 	}
-	fmt.Print(ctx)
+
 	if o.Status != status {
-		err = u.order.UpdateOrder(ctx, orderID, o.Status, o.Accrual, u.user)
+		err = u.order.UpdateOrder(ctx, orderID, o.Status, o.Accrual, *u.userApp)
 		if err != nil {
 			u.logger.Errorw("Error while updating order data",
 				"order id", orderID,
@@ -102,32 +101,10 @@ func (u *Updater) checkOrder(orderID, status string) {
 	}
 }
 
-func InitUpdater(ctx context.Context, cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger *zap.SugaredLogger) {
+func InitUpdater(ctx context.Context, cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger *zap.SugaredLogger, User sharedTypes.UserApper, Order sharedTypes.OrderApper) {
 	jobCh := make(chan *Job)
 
-	order, err := storage.InitOrder(conn)
-
-	if err != nil {
-		logger.Panicw("Unable to start logger",
-			"DB URL", cfg.DatabaseURI,
-			"err", err,
-		)
-
-		return
-	}
-
-	user, err := storage.InitUser(conn)
-
-	if err != nil {
-		logger.Panicw("Unable to start logger",
-			"DB URL", cfg.DatabaseURI,
-			"err", err,
-		)
-
-		return
-	}
-
-	u := Updater{cfg: cfg, Ch: jobCh, order: order, user: user, logger: logger, CheckOrderDelay: cfg.CheckOrderDelay}
+	u := Updater{cfg: cfg, Ch: jobCh, order: Order, user: User, logger: logger, CheckOrderDelay: cfg.CheckOrderDelay}
 
 	wg := sync.WaitGroup{}
 
@@ -155,7 +132,7 @@ func InitUpdater(ctx context.Context, cfg config.Config, conn *pgxpool.Pool, wor
 			requestCtx, stop := context.WithTimeout(ctx, time.Duration(cfg.CheckOrderDelay)*time.Second)
 			defer stop()
 
-			orders, err := order.GetUnproccessedOrders(requestCtx)
+			orders, err := Order.GetUnproccessedOrders(requestCtx)
 
 			if err != nil {
 				u.logger.Errorw("Error while getting unprocessed orders",

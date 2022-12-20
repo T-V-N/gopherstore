@@ -44,6 +44,8 @@ func main() {
 
 	defer st.Conn.Close()
 
+	var userLocks sync.Map
+
 	withdrawalApp, err := app.InitWithdrawal(st.Conn, cfg, sugar)
 	if err != nil {
 		sugar.Fatalw("Unable to init application",
@@ -51,7 +53,7 @@ func main() {
 		)
 	}
 
-	userApp, err := app.InitUserApp(st.Conn, *withdrawalApp, cfg, sugar)
+	userApp, err := app.InitUserApp(st.Conn, *withdrawalApp, cfg, sugar, &userLocks)
 	if err != nil {
 		sugar.Fatalw("Unable to init application",
 			"Error", err,
@@ -84,24 +86,25 @@ func main() {
 	)
 
 	gr := &sync.WaitGroup{}
+	gr.Add(1)
 
 	go func() {
-		service.InitUpdater(ctx, *cfg, st.Conn, cfg.WorkerLimit, sugar)
-		gr.Add(1)
+		service.InitUpdater(ctx, *cfg, st.Conn, cfg.WorkerLimit, sugar, userApp, orderApp)
+		gr.Done()
 	}()
 
+	gr.Add(1)
 	go func() {
 		err = server.ListenAndServe()
 
 		if err != nil {
 			sugar.Error("Unable to run server")
 		}
+		gr.Done()
 	}()
-	gr.Add(1)
 
 	<-ctx.Done()
 	stop()
-	gr.Done()
 
 	shutdownCtx, stopShutdownCtx := context.WithTimeout(context.Background(), time.Duration(cfg.ContextCancelTimeout)*time.Second)
 	defer stopShutdownCtx()
@@ -113,8 +116,6 @@ func main() {
 			"Error", err,
 		)
 	}
-
-	gr.Done()
 
 	gr.Wait()
 	sugar.Info("Server stopped")

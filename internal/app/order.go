@@ -75,3 +75,31 @@ func (app *OrderApp) ListOrders(ctx context.Context, uid string) ([]sharedTypes.
 
 	return list, err
 }
+
+func (app *OrderApp) GetUnproccessedOrders(ctx context.Context) ([]sharedTypes.Order, error) {
+	list, err := app.Order.GetUnproccessedOrders(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(list) == 0 {
+		return nil, utils.ErrNoData
+	}
+
+	return list, err
+}
+
+func (app *OrderApp) UpdateOrder(ctx context.Context, orderID, status string, accrual float32, user sharedTypes.UserApper) error {
+	uid, err := app.Order.UpdateOrder(ctx, orderID, status, accrual)
+
+	if err != nil {
+		return err
+	}
+
+	if accrual > 0 {
+		return user.UpdateUser(ctx, uid, orderID, accrual)
+	}
+
+	return nil
+}

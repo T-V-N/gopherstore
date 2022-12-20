@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"errors"
+	"sync"
 
 	"github.com/T-V-N/gopherstore/internal/auth"
 	"github.com/T-V-N/gopherstore/internal/config"
@@ -18,16 +20,17 @@ type UserApp struct {
 	Withdrawal sharedTypes.WithdrawalStorager
 	Cfg        *config.Config
 	logger     *zap.SugaredLogger
+	userLocks  *sync.Map
 }
 
-func InitUserApp(Conn *pgxpool.Pool, w WithdrawalApp, cfg *config.Config, logger *zap.SugaredLogger) (*UserApp, error) {
+func InitUserApp(Conn *pgxpool.Pool, w WithdrawalApp, cfg *config.Config, logger *zap.SugaredLogger, ul *sync.Map) (*UserApp, error) {
 	user, err := storage.InitUser(Conn)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &UserApp{user, w.Withdrawal, cfg, logger}, nil
+	return &UserApp{user, w.Withdrawal, cfg, logger, ul}, nil
 }
 
 func (app *UserApp) Register(ctx context.Context, creds sharedTypes.Credentials) (string, error) {
@@ -87,7 +90,17 @@ func (app *UserApp) WithdrawBalance(ctx context.Context, uid, orderID string, am
 		return utils.ErrWrongFormat
 	}
 
-	balance, err := app.User.GetBalanceAndLock(ctx, uid)
+	rawLock, _ := app.userLocks.LoadOrStore(uid, &sync.Mutex{})
+	lock, ok := rawLock.(*sync.Mutex)
+
+	if !ok {
+		return errors.New("Wrong lock type")
+	}
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	balance, err := app.User.GetBalance(ctx, uid)
 
 	if err != nil {
 		return err
@@ -101,6 +114,22 @@ func (app *UserApp) WithdrawBalance(ctx context.Context, uid, orderID string, am
 	newCurrent := balance.Current - amount
 
 	err = app.User.WithdrawBalance(ctx, uid, orderID, amount, newCurrent, newWithdrawn, app.Withdrawal)
+
+	return err
+}
+
+func (app *UserApp) UpdateUser(ctx context.Context, uid, orderID string, amount float32) error {
+	rawLock, _ := app.userLocks.LoadOrStore(uid, &sync.Mutex{})
+	lock, ok := rawLock.(*sync.Mutex)
+
+	if !ok {
+		return errors.New("Wrong lock type")
+	}
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	err := app.User.UpdateUser(ctx, uid, orderID, amount)
 
 	return err
 }
