@@ -20,7 +20,7 @@ type UserApp struct {
 	Withdrawal sharedTypes.WithdrawalStorager
 	Cfg        *config.Config
 	logger     *zap.SugaredLogger
-	userLocks  *sync.Map
+	UserLocks  *sync.Map
 }
 
 func InitUserApp(Conn *pgxpool.Pool, w WithdrawalApp, cfg *config.Config, logger *zap.SugaredLogger, ul *sync.Map) (*UserApp, error) {
@@ -90,11 +90,11 @@ func (app *UserApp) WithdrawBalance(ctx context.Context, uid, orderID string, am
 		return utils.ErrWrongFormat
 	}
 
-	rawLock, _ := app.userLocks.LoadOrStore(uid, &sync.Mutex{})
+	rawLock, _ := app.UserLocks.LoadOrStore(uid, &sync.Mutex{})
 	lock, ok := rawLock.(*sync.Mutex)
 
 	if !ok {
-		return errors.New("Wrong lock type")
+		return errors.New("wrong lock type")
 	}
 
 	lock.Lock()
@@ -119,11 +119,11 @@ func (app *UserApp) WithdrawBalance(ctx context.Context, uid, orderID string, am
 }
 
 func (app *UserApp) UpdateUser(ctx context.Context, uid, orderID string, amount float32) error {
-	rawLock, _ := app.userLocks.LoadOrStore(uid, &sync.Mutex{})
+	rawLock, _ := app.UserLocks.LoadOrStore(uid, &sync.Mutex{})
 	lock, ok := rawLock.(*sync.Mutex)
 
 	if !ok {
-		return errors.New("Wrong lock type")
+		return errors.New("wrong lock type")
 	}
 
 	lock.Lock()

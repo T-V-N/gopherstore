@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -570,7 +571,7 @@ func Test_HandleWithdrawBalance(t *testing.T) {
 	user := mocks.NewUserStorage(t)
 	withdrawal := mocks.NewWithdrawalStorage(t)
 
-	a := app.UserApp{User: user, Withdrawal: withdrawal, Cfg: cfg}
+	a := app.UserApp{User: user, Withdrawal: withdrawal, Cfg: cfg, UserLocks: &sync.Map{}}
 
 	hn := handler.InitUserHandler(&a, cfg, &zap.SugaredLogger{})
 

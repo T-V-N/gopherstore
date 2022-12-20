@@ -38,7 +38,7 @@ func (user *User) CreateUser(ctx context.Context, creds sharedTypes.Credentials)
 	return id, nil
 }
 
-func (user *User) UpdateUser(ctx context.Context, orderID, uid string, accrual float32) error {
+func (user *User) UpdateUser(ctx context.Context, uid, orderID string, accrual float32) error {
 	updateBalanceSQL := `
 	UPDATE USERS SET current_balance = current_balance + $1
 	WHERE uid = (select uid from orders WHERE id = $2)
