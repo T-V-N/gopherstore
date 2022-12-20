@@ -27,7 +27,7 @@ type Updater struct {
 	logger          *zap.SugaredLogger
 	done            chan bool
 	CheckOrderDelay uint
-	userApp         *sharedTypes.UserApper
+	userApp         sharedTypes.UserApper
 }
 
 type AccrualOrder struct {
@@ -88,7 +88,7 @@ func (u *Updater) checkOrder(orderID, status string) {
 	}
 
 	if o.Status != status {
-		err = u.order.UpdateOrder(ctx, orderID, o.Status, o.Accrual, *u.userApp)
+		err = u.order.UpdateOrder(ctx, orderID, o.Status, o.Accrual, u.userApp)
 		if err != nil {
 			u.logger.Errorw("Error while updating order data",
 				"order id", orderID,
