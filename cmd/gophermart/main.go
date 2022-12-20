@@ -61,7 +61,7 @@ func main() {
 		)
 	}
 
-	orderApp, err := app.InitOrderApp(st.Conn, cfg, sugar, utils.RegOrderHTTPInit(cfg.AccrualSystemAddress+"/api/orders"))
+	orderApp, err := app.InitOrderApp(st.Conn, cfg, sugar, utils.InitAccrual(cfg.AccrualSystemAddress+"/api/orders"))
 	if err != nil {
 		sugar.Fatalw("Unable to init application",
 			"Error", err,
