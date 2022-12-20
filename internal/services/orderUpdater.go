@@ -62,7 +62,7 @@ func checkOrder(orderID, status string, logger *zap.SugaredLogger, cfg config.Co
 func InitUpdater(ctx context.Context, cfg config.Config, conn *pgxpool.Pool, workerLimit int, logger *zap.SugaredLogger, User sharedTypes.UserApper, Order sharedTypes.OrderApper) {
 	jobCh := make(chan *Job)
 	wg := sync.WaitGroup{}
-	accrual := utils.InitAccrual(cfg.AccrualSystemAddress + "/api/orders")
+	accrual := utils.InitAccrual(cfg.AccrualSystemAddress)
 
 	for i := 0; i < workerLimit; i++ {
 		wg.Add(1)
