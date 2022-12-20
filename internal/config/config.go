@@ -14,7 +14,7 @@ type Config struct {
 	SecretKey            string `env:"SECRET_KEY" envDefault:"secret"`
 	MigrationsPath       string `env:"MIGRATIONS_PATH" envDefault:"migrations"`
 	CompressLevel        int    `env:"COMPRESS_LEVEL" envDefault:"5"`
-	CheckOrderDelay      uint   `env:"CHECK_ORDER_DELAY" envDefault:"2"`
+	CheckOrderDelay      uint   `env:"CHECK_ORDER_DELAY" envDefault:"10"`
 	CheckOrderInterval   uint   `env:"CHECK_ORDER_INTERVAL" envDefault:"10"`
 	WorkerLimit          int    `env:"WORKER_LIMIT" envDefault:"10"`
 	ContextCancelTimeout int    `env:"CONTEXT_CANCEL_AMOUNT" envDefault:"10"`
