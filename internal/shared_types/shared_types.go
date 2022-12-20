@@ -69,6 +69,10 @@ type OrderApper interface {
 	UpdateOrder(ctx context.Context, uid, orderID string, amount float32, user UserApper) error
 }
 
+type OrderRegisterer interface {
+	RegisterOrder(ctx context.Context, orderID string) error
+}
+
 type UserApper interface {
 	Register(ctx context.Context, creds Credentials) (string, error)
 	Login(ctx context.Context, creds Credentials) (string, error)

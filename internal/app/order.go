@@ -1,10 +1,7 @@
 package app
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"net/http"
 
 	"github.com/T-V-N/gopherstore/internal/config"
 	sharedTypes "github.com/T-V-N/gopherstore/internal/shared_types"
@@ -16,23 +13,20 @@ import (
 )
 
 type OrderApp struct {
-	Order  sharedTypes.OrderStorager
-	Cfg    *config.Config
-	logger *zap.SugaredLogger
+	Order    sharedTypes.OrderStorager
+	Cfg      *config.Config
+	logger   *zap.SugaredLogger
+	RegOrder sharedTypes.OrderRegisterer
 }
 
-type OrderID struct {
-	Order string `json:"order"`
-}
-
-func InitOrderApp(Conn *pgxpool.Pool, cfg *config.Config, logger *zap.SugaredLogger) (*OrderApp, error) {
+func InitOrderApp(Conn *pgxpool.Pool, cfg *config.Config, logger *zap.SugaredLogger, or sharedTypes.OrderRegisterer) (*OrderApp, error) {
 	order, err := storage.InitOrder(Conn)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &OrderApp{order, cfg, logger}, nil
+	return &OrderApp{order, cfg, logger, or}, nil
 }
 
 func (app *OrderApp) CreateOrder(ctx context.Context, orderID string, uid string) error {
@@ -42,20 +36,11 @@ func (app *OrderApp) CreateOrder(ctx context.Context, orderID string, uid string
 		return utils.ErrWrongFormat
 	}
 
-	body := bytes.NewBuffer([]byte{})
-
-	err := json.NewEncoder(body).Encode(OrderID{Order: orderID})
-	if err != nil {
-		return err
-	}
-
-	r, err := http.Post(app.Cfg.AccrualSystemAddress+"/api/orders", "application/json", body)
+	err := app.RegOrder.RegisterOrder(ctx, orderID)
 
 	if err != nil {
 		return err
 	}
-
-	r.Body.Close()
 
 	err = app.Order.CreateOrder(ctx, orderID, uid)
 

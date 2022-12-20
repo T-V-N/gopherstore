@@ -326,7 +326,7 @@ func Test_HandleCreateOrder(t *testing.T) {
 	cfg, _ := InitTestConfig()
 	order := mocks.NewOrderStorager(t)
 
-	a := app.OrderApp{Order: order, Cfg: cfg}
+	a := app.OrderApp{Order: order, Cfg: cfg, RegOrder: utils.RegOrderHTTPInit(cfg.AccrualSystemAddress + "/api/orders")}
 	hn := handler.InitOrderHandler(&a, cfg, &zap.SugaredLogger{})
 
 	for _, tt := range tests {

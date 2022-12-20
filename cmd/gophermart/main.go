@@ -14,6 +14,7 @@ import (
 	"github.com/T-V-N/gopherstore/internal/handler"
 	"github.com/T-V-N/gopherstore/internal/middleware"
 	"github.com/T-V-N/gopherstore/internal/router"
+	"github.com/T-V-N/gopherstore/internal/utils"
 
 	service "github.com/T-V-N/gopherstore/internal/services"
 	"github.com/T-V-N/gopherstore/internal/storage"
@@ -60,7 +61,7 @@ func main() {
 		)
 	}
 
-	orderApp, err := app.InitOrderApp(st.Conn, cfg, sugar)
+	orderApp, err := app.InitOrderApp(st.Conn, cfg, sugar, utils.RegOrderHTTPInit(cfg.AccrualSystemAddress+"/api/orders"))
 	if err != nil {
 		sugar.Fatalw("Unable to init application",
 			"Error", err,
